@@ -1,0 +1,22 @@
+{
+  "name": "town",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "TOWN — a persistent artificial civilization, observed rather than controlled.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "node --import tsx --test packages/sim/test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.base.json --noEmit",
+    "soak": "node --import tsx tools/soak.ts",
+    "inspect": "node --import tsx tools/inspect.ts",
+    "verify": "npm run typecheck && npm run test && npm run soak -- --days 100 --quiet"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "tsx": "^4.19.0",
+    "@types/node": "^22.0.0"
+  }
+}

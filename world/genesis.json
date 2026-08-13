@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "townName": "Alder Bend",
+  "seed": "alder-bend-0067",
+  "founding": {
+    "population": 25,
+    "adultAgeRange": [19, 64],
+    "coupleShare": 0.42,
+    "homeCapacity": 6
+  },
+  "economy": {
+    "note": "Founding wealth is deliberately flat. Inequality in Alder Bend must be earned inside the simulation, so that the ledger can always explain it.",
+    "foundingCashMean": 240000,
+    "foundingCashStdev": 60000,
+    "foundingCashFloor": 40000,
+    "treasuryFounding": 1500000,
+    "currencySymbol": "$"
+  },
+  "government": {
+    "incomeTaxRate": 0.08,
+    "salesTaxRate": 0.03
+  },
+  "broadcast": {
+    "simMinutesPerRealSecond": 2,
+    "leadTargetRealMinutes": 90,
+    "leadFloorRealMinutes": 20
+  },
+  "lifecycle": {
+    "note": "Ageing accrues from Stage 2 so the economy is tuned against a stable population; mortality is enabled at Stage 9, once inheritance exists to receive an estate.",
+    "ageingEnabled": true,
+    "mortalityEnabled": false
+  }
+}

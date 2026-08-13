@@ -1,0 +1,16 @@
+{
+  "name": "TOWN — Alder Bend",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+  "postCreateCommand": "npm install --no-audit --no-fund",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.tabSize": 2,
+        "files.eol": "\n"
+      }
+    }
+  },
+  "portsAttributes": {
+    "5173": { "label": "Alder Bend (client, from Stage 4)", "onAutoForward": "openPreview" }
+  }
+}

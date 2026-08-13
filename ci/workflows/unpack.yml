@@ -1,0 +1,72 @@
+name: unpack
+
+# The iPad pipeline.
+#
+# GitHub's web uploader can take a single file but not a folder, so a zip
+# arrives at the repository root and this workflow unpacks it in place: extract,
+# strip the wrapper directory, copy over the tree, delete the zip, commit.
+#
+# It stays in the repo. Every future drop is: upload the zip, run this, done.
+
+on:
+  workflow_dispatch:
+    inputs:
+      zip:
+        description: 'Name of the uploaded zip file at the repo root'
+        required: true
+        default: 'town-stage0.zip'
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: world-write
+  cancel-in-progress: false
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unpack
+        run: |
+          set -euo pipefail
+          ZIP="${{ inputs.zip }}"
+          test -f "$ZIP" || { echo "::error::$ZIP is not at the repo root"; exit 1; }
+
+          rm -rf _unpack && mkdir _unpack
+          unzip -q "$ZIP" -d _unpack
+
+          # If everything sits under a single wrapper folder, unwrap it.
+          SRC=_unpack
+          if [ "$(find _unpack -mindepth 1 -maxdepth 1 | wc -l)" -eq 1 ] \
+             && [ -d "$(find _unpack -mindepth 1 -maxdepth 1)" ]; then
+            SRC="$(find _unpack -mindepth 1 -maxdepth 1)"
+          fi
+
+          echo "Unpacking from $SRC"
+          # -T copies dotfiles too; the destination keeps anything not in the drop,
+          # so this workflow does not delete itself.
+          cp -RT "$SRC" .
+          rm -rf _unpack "$ZIP"
+
+          echo "### Unpacked \`$ZIP\`" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          git status --short >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit
+        run: |
+          set -euo pipefail
+          git config user.name  "alder-bend-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+            exit 0
+          fi
+          git commit -m "Unpack ${{ inputs.zip }}"
+          git push
