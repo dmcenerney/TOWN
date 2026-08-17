@@ -8,13 +8,13 @@ The town is observed, not played. Humans get a window; the simulation gets the l
 
 ## Where this is
 
-**Stage 0 of 10 — complete.** The spine exists: deterministic time, keyed randomness, a double-entry ledger, the invariant suite, the tick pipeline, and a reproducible founding.
+**Stage 1 of 10 — complete.** The spine exists, and so does the town: streets, twenty-nine buildings, a navigation graph, and citizens who walk between them along real routes in real time.
 
-Nobody has anywhere to walk yet. That is Stage 1.
+Nobody has a reason to walk yet. That is Stage 2.
 
 ```
  0  Skeleton          ██████████  time · rng · ledger · invariants · genesis
- 1  Space & motion    ··········  map · nav graph · routing · movement segments
+ 1  Space & motion    ██████████  map · nav graph · routing · movement segments
  2  Life & ledger     ··········  needs · schedules · jobs · wages · food · shops
  3  Broadcast         ··········  events · playback blocks · manifest · retention
  4  THE TOWN          ··········  the page you can open and watch
@@ -44,6 +44,11 @@ npm run soak -- --days 100 --strict   # full invariant check on every tick
 npm run inspect                   # the founding roster
 npm run inspect -- --day 30 --citizen c_001
 npm run inspect -- --ledger
+
+npm run map                       # the town, drawn in text
+npm run map -- --nodes --at 540    # with the nav graph and everyone outdoors at 09:00
+npm run walk                       # watch Clara walk to the market, minute by minute
+npm run build:map                  # re-author the town from tools/build-map.ts
 ```
 
 `npm run verify` runs everything a pull request must pass.
@@ -68,6 +73,34 @@ Ages skew young (median 29) because the point of this project is what happens af
 
 ---
 
+## Alder Bend
+
+A three-by-three street grid on a bend in the Alder. Civic buildings cluster round the public square where Mill Road crosses Main Street; trade lines Main Street either side of it; housing runs along Willow Row to the north and River Lane to the south. The farm holds the north-west edge, and the factory sits downstream in the south-east, near the water and away from the houses, the way such things usually end up.
+
+420m × 300m · 29 buildings · 69 navigation nodes · 6 streets · 17 houses
+
+```
+  CLARA RAMIREZ
+  from  Ramirez House  (140, 42)
+  to    Miller's Market  (132, 176)
+
+  189m via Willow Row → West Way → Main Street
+  departs 09:00, arrives 09:03
+
+  09:00   ( 140.0,   50.5)   leaves Ramirez House
+  09:01   ( 100.0,   73.4)   walking · 46.1m this minute
+  09:02   ( 100.0,  136.3)   walking · 62.9m this minute
+  09:03   ( 132.0,  176.0)   enters Miller's Market
+```
+
+Geography is authored, in `tools/build-map.ts`, and treated as fixed. When a business changes hands the building changes owner; the street it stands on does not move.
+
+Routing is precomputed for every pair of nodes at load — about 340,000 operations, once. That means a citizen weighing up where to shop can price the walk to every option without the tick loop noticing, which is what Stage 2's planner needs.
+
+A journey is decided once and then becomes a closed-form function of time. Asking where Clara is at 09:17 is arithmetic on a polyline, not the replay of seventeen minutes. This is the same function the browser will call at sixty frames a second in Stage 4.
+
+---
+
 ## Rules the code enforces
 
 These are not aspirations. They are assertions that run every tick in development and fail the build in CI.
@@ -78,9 +111,12 @@ These are not aspirations. They are assertions that run every tick in developmen
 - **The dead do nothing.** No activity, no plan, no employer, no movement. Once someone is in the cemetery they stay there.
 - **No duplicate ticks.** A retried GitHub Action with a run id already applied advances the world by zero minutes.
 - **Occupancy is symmetric.** If a building lists you inside it, you agree you are inside it.
+- **Nobody outruns a bicycle.** Every travel segment is checked against a hard speed limit, so a journey given too few minutes fails the build instead of looking like skating.
+- **The map is connected.** Genesis refuses to found a town where any node cannot reach any other. A citizen stranded on Day 1 stays stranded forever.
+- **Doors are real.** You cannot be inside a building that is shut, full, or derelict — you end up standing outside it, which is exactly what should happen.
 - **Nothing is faked.** If the renderer needs a value, the simulation emits it first.
 
-Fifteen corruption tests deliberately break each of these to prove the checks bite.
+Seventeen corruption tests deliberately break each of these to prove the checks bite.
 
 ---
 
@@ -103,7 +139,8 @@ day 30   a231a64ca9ab223f…
 
 | Run | Speed |
 |---|---|
-| 1,000 days, sampled invariants | 0.4 s · ~2,500 days/sec |
-| 1,000 days, invariants every tick | 31 s · ~32 days/sec |
+| 1,000 days, sampled invariants | 0.5 s · ~1,850 days/sec |
+| 1,000 days, invariants every tick | ~35 s |
+| 89 tests | 6 s |
 
-Both figures are for the Stage 0 world, which has no behaviour in it yet. They exist as a baseline to measure the cost of each subsequent stage against.
+Stage 1 cost about 25% of the tick budget, all of it in the wider invariant suite rather than in movement — journeys are closed-form, so a citizen walking across town costs nothing per minute.

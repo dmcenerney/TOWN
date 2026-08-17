@@ -17,6 +17,8 @@ import type {
 import type { BuildingId, CitizenId, HouseholdId, NodeId, Cents, AccountId } from '../types/ids.ts';
 import { accountId, buildingId, citizenId, householdId, asId } from '../types/ids.ts';
 import { Ledger, EXTERNAL_ACCOUNT } from '../core/ledger.ts';
+import { buildNavGraph, isFullyConnected, parseTownMap } from '../space/navgraph.ts';
+import type { TownMap } from '../types/map.ts';
 import { Scheduler, TICKS_PER_DAY, DAYS_PER_YEAR, seasonOf } from '../core/clock.ts';
 import { rngFor, type Rng } from '../core/rng.ts';
 import { TRAIT_KEYS } from '../types/world.ts';
@@ -106,8 +108,19 @@ interface HouseholdPlan {
   surname: string;
 }
 
-/** Build the founding world. Pure: same config in, same world out. */
-export function createWorld(config: GenesisConfig): World {
+/** Build the founding world. Pure: same config and map in, same world out. */
+export function createWorld(config: GenesisConfig, rawMap: unknown): World {
+  const map = parseTownMap(rawMap);
+  const nav = buildNavGraph(map);
+  const connectivity = isFullyConnected(nav);
+  if (!connectivity.connected) {
+    const [a, b] = connectivity.unreachable[0]!;
+    throw new Error(
+      `map "${map.name}" is not fully connected: ${a} cannot reach ${b} ` +
+        `(${connectivity.unreachable.length} unreachable pairs). A citizen stranded on ` +
+        'Day 1 stays stranded forever.',
+    );
+  }
   const seed = config.seed;
   const ledger = new Ledger();
   const scheduler = new Scheduler<ScheduledTask>();
@@ -135,6 +148,8 @@ export function createWorld(config: GenesisConfig): World {
     scheduler,
     government,
     weather: { condition: 'clear', temperatureC: 14, season: seasonOf(0) },
+    map,
+    nav,
     eventSeq: 0,
     appliedRuns: [],
   };
@@ -178,35 +193,49 @@ export function createWorld(config: GenesisConfig): World {
     }
   }
 
-  // --- build people and homes ---------------------------------------------
+  // --- raise the town -----------------------------------------------------
+  // Every structure on the map becomes a live building. Geography is authored;
+  // only ownership, occupancy and condition are simulation state.
+
+  for (const mb of map.buildings) {
+    const building: Building = {
+      id: mb.id,
+      type: mb.type,
+      name: mb.name,
+      position: { ...mb.position },
+      footprint: { ...mb.footprint },
+      entranceNode: mb.entranceNode,
+      ownerId: null,
+      businessId: null,
+      householdId: null,
+      occupants: [],
+      capacity: mb.capacity,
+      openingHours: mb.openingHours,
+      condition: round3(rngFor(seed, 'genesis:condition', mb.id).range(0.68, 1)),
+      visualState: mb.type === 'vacant_commercial' ? 'for_sale' : 'open',
+    };
+    world.buildings.set(mb.id, building);
+  }
+
+  const vacantHomes = map.buildings.filter((b) => b.type === 'home').map((b) => b.id);
+  if (vacantHomes.length < plans.length) {
+    throw new Error(
+      `the map has ${vacantHomes.length} homes but ${plans.length} households were founded — ` +
+        'add houses in tools/build-map.ts or lower the founding population',
+    );
+  }
+
+  // --- build people and settle them ---------------------------------------
   const usedNames = new Set<string>();
   const usedGiven = new Set<string>();
   let citizenN = 0;
 
   plans.forEach((plan, hIdx) => {
     const hid = householdId(hIdx + 1);
-    const bid = buildingId(hIdx + 1);
-
-    // Placeholder siting: an orderly grid until Stage 1 lays the real streets.
-    const col = hIdx % 5;
-    const row = Math.floor(hIdx / 5);
-    const home: Building = {
-      id: bid,
-      type: 'home',
-      name: `${plan.surname} House`,
-      position: { x: 40 + col * 34, y: 40 + row * 30 },
-      footprint: { x: 14, y: 11 },
-      entranceNode: asId<NodeId>(`n_home_${String(hIdx + 1).padStart(2, '0')}`),
-      ownerId: null,
-      businessId: null,
-      householdId: hid,
-      occupants: [],
-      capacity: config.founding.homeCapacity,
-      openingHours: null,
-      condition: round3(rngFor(seed, 'genesis', `home_${hIdx}`).range(0.7, 1)),
-      visualState: 'open',
-    };
-    world.buildings.set(bid, home);
+    const bid = vacantHomes[hIdx]!;
+    const home = world.buildings.get(bid)!;
+    home.householdId = hid;
+    home.name = `${plan.surname} House`;
 
     const memberIds: CitizenId[] = [];
     for (const adult of plan.adults) {

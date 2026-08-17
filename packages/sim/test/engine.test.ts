@@ -7,9 +7,10 @@ import { hashWorld } from '../src/core/hash.ts';
 import { TICKS_PER_DAY, dayOf } from '../src/core/clock.ts';
 import { EXTERNAL_ACCOUNT } from '../src/core/ledger.ts';
 import genesisJson from '../../../world/genesis.json' with { type: 'json' };
+import mapJson from '../../../world/map.json' with { type: 'json' };
 
 const config = parseGenesisConfig(genesisJson);
-const fresh = () => createWorld(config);
+const fresh = () => createWorld(config, mapJson);
 
 test('genesis: founds the configured population in valid households', () => {
   const w = fresh();
@@ -61,7 +62,7 @@ test('genesis: is reproducible from the seed alone', () => {
 });
 
 test('genesis: a different seed founds a different town', () => {
-  const other = createWorld({ ...config, seed: 'somewhere-else-0001' });
+  const other = createWorld({ ...config, seed: 'somewhere-else-0001' }, mapJson);
   assert.notEqual(hashWorld(fresh()), hashWorld(other));
   assert.equal(other.citizens.size, config.founding.population);
   assertWorld(other);

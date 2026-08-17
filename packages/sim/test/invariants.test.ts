@@ -4,14 +4,17 @@ import { checkWorld, assertWorld, InvariantError } from '../src/core/invariants.
 import { createWorld, parseGenesisConfig } from '../src/world/genesis.ts';
 import { EXTERNAL_ACCOUNT } from '../src/core/ledger.ts';
 import genesisJson from '../../../world/genesis.json' with { type: 'json' };
+import mapJson from '../../../world/map.json' with { type: 'json' };
 import type { World } from '../src/types/world.ts';
 import type { BuildingId, CitizenId } from '../src/types/ids.ts';
 import { asId } from '../src/types/ids.ts';
 
 const config = parseGenesisConfig(genesisJson);
-const fresh = (): World => createWorld(config);
+const fresh = (): World => createWorld(config, mapJson);
 const rules = (w: World): string[] => checkWorld(w).map((v) => v.rule);
 const firstCitizen = (w: World) => [...w.citizens.values()][0]!;
+/** The town hall has no residents, so corruption tests need an inhabited building. */
+const occupiedBuilding = (w: World) => [...w.buildings.values()].find((b) => b.occupants.length > 0)!;
 
 test('invariants: the founding world is clean', () => {
   assert.deepEqual(checkWorld(fresh()), []);
@@ -95,16 +98,14 @@ const corruptions: { name: string; rule: string; corrupt: (w: World) => void }[]
     name: 'occupancy asymmetry',
     rule: 'space.occupancy_symmetry',
     corrupt: (w) => {
-      const b = [...w.buildings.values()][0]!;
-      b.occupants = [];
+      occupiedBuilding(w).occupants = [];
     },
   },
   {
     name: 'a building over capacity',
     rule: 'space.capacity',
     corrupt: (w) => {
-      const b = [...w.buildings.values()][0]!;
-      b.capacity = 0;
+      occupiedBuilding(w).capacity = 0;
     },
   },
   {

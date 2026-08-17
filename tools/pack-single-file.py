@@ -15,7 +15,7 @@ import tarfile
 from pathlib import Path
 
 SRC = Path("/mnt/user-data/outputs/town")
-OUT = Path("/mnt/user-data/outputs/install-alder-bend.yml")
+OUT = Path("/mnt/user-data/outputs/install-alder-bend-stage1.yml")
 
 def arcname_for(p: Path) -> str:
     """
@@ -35,7 +35,7 @@ buf = io.BytesIO()
 with tarfile.open(fileobj=buf, mode="w:gz", compresslevel=9, format=tarfile.GNU_FORMAT) as tar:
     paths = sorted(
         p for p in SRC.rglob("*")
-        if "node_modules" not in p.parts and p.name != "install-alder-bend.yml"
+        if "node_modules" not in p.parts and not p.name.startswith("install-alder-bend")
     )
     for p in paths:
         info = tar.gettarinfo(str(p), arcname=arcname_for(p))
@@ -103,7 +103,7 @@ jobs:
           git config user.name  "alder-bend-bot"
           git config user.email "alder-bend-bot@users.noreply.github.com"
           git add -A
-          git commit -m "Found Alder Bend — Stage 0: time, randomness, ledger, invariants, genesis"
+          git commit -m "Alder Bend Stage 1: map, navigation graph, routing, movement"
           git push
 
       - uses: actions/setup-node@v4
@@ -123,7 +123,7 @@ jobs:
         run: |
           node --import tsx tools/soak.ts --days 1000 | tee /tmp/soak.txt
           {{
-            echo "## Alder Bend is founded"
+            echo "## Alder Bend, Stage 1"
             echo ""
             echo "The repository is written and committed. Pushes made by a workflow do not"
             echo "trigger other workflows, so the verification below ran here instead. Your own"

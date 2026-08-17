@@ -46,3 +46,19 @@ jobs:
 
       - name: Soak — 100 days, invariants on every tick
         run: npm run soak -- --days 100 --strict --quiet
+
+      - name: The town
+        run: |
+          {
+            echo "## Alder Bend"
+            echo ""
+            echo '```'
+            node --import tsx tools/map.ts
+            echo '```'
+            echo ""
+            echo "## A citizen walks to the market"
+            echo ""
+            echo '```'
+            node --import tsx tools/walk.ts
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

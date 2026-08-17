@@ -41,6 +41,7 @@ export function worldFingerprint(w: World): Record<string, unknown> {
     tick: w.tick,
     eventSeq: w.eventSeq,
     weather: w.weather,
+    mapVersion: `${w.map.name}@${w.map.version}`,
     government: w.government,
     citizens: w.citizens,
     buildings: w.buildings,

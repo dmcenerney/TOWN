@@ -22,10 +22,11 @@ const get = (flag: string): string | undefined => {
 };
 
 const day = Number(get('--day') ?? 0);
+const map = JSON.parse(readFileSync(new URL('../world/map.json', import.meta.url), 'utf8'));
 const config = parseGenesisConfig(
   JSON.parse(readFileSync(new URL('../world/genesis.json', import.meta.url), 'utf8')),
 );
-const world = createWorld(config);
+const world = createWorld(config, map);
 if (day > 0) advanceDays(world, day, { strictInvariants: false, invariantInterval: 720 });
 
 const ageOf = (w: World, birthDay: number): number =>

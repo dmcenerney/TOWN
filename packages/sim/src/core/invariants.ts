@@ -14,6 +14,7 @@
 import type { World } from '../types/world.ts';
 import { TICKS_PER_DAY, dayOf } from './clock.ts';
 import { NEED_KEYS, EMOTION_KEYS, TRAIT_KEYS } from '../types/world.ts';
+import { MAX_SPEED } from '../space/movement.ts';
 
 export interface Violation {
   rule: string;
@@ -119,9 +120,29 @@ export function checkWorld(w: World): Violation[] {
       if (w.tick > loc.arriveTick) {
         push('space.arrival_processed', c.identity.id, `overdue arrival by ${w.tick - loc.arriveTick} ticks`);
       }
+      if (!w.nav.nodes.has(loc.toNode)) {
+        push('space.destination_exists', c.identity.id, `heading for unknown node ${loc.toNode}`);
+      }
+      // Nobody outruns a bicycle. Catches a journey given too few minutes,
+      // which would look like a citizen skating across town.
+      let metres = 0;
+      for (let i = 1; i < loc.path.length; i++) {
+        metres += Math.hypot(loc.path[i]!.x - loc.path[i - 1]!.x, loc.path[i]!.y - loc.path[i - 1]!.y);
+      }
+      const seconds = (loc.arriveTick - loc.departTick) * 60;
+      if (seconds > 0 && metres / seconds > MAX_SPEED) {
+        push(
+          'space.speed_limit',
+          c.identity.id,
+          `${metres.toFixed(0)}m in ${(seconds / 60).toFixed(0)}min = ${(metres / seconds).toFixed(2)}m/s`,
+        );
+      }
     }
   }
   for (const b of w.buildings.values()) {
+    if (!w.nav.nodes.has(b.entranceNode)) {
+      push('space.entrance_exists', b.id, `entrance ${b.entranceNode} is not on the map`);
+    }
     if (b.occupants.length > b.capacity) {
       push('space.capacity', b.id, `${b.occupants.length} occupants > capacity ${b.capacity}`);
     }

@@ -15,9 +15,10 @@ import { hashWorld } from '../packages/sim/src/core/hash.ts';
 const config = parseGenesisConfig(
   JSON.parse(readFileSync(new URL('../world/genesis.json', import.meta.url), 'utf8')),
 );
+const map = JSON.parse(readFileSync(new URL('../world/map.json', import.meta.url), 'utf8'));
 
-const genesis = createWorld(config);
-const day30 = createWorld(config);
+const genesis = createWorld(config, map);
+const day30 = createWorld(config, map);
 advanceDays(day30, 30, { strictInvariants: false, invariantInterval: 240 });
 
 const fixture = {

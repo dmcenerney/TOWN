@@ -25,6 +25,8 @@ import type {
   Vec2,
 } from './ids.ts';
 import type { Ledger } from '../core/ledger.ts';
+import type { TownMap } from './map.ts';
+import type { NavGraph } from '../space/navgraph.ts';
 import type { Scheduler } from '../core/clock.ts';
 import type { Season } from '../core/clock.ts';
 
@@ -303,6 +305,10 @@ export interface World {
   scheduler: Scheduler<ScheduledTask>;
   government: Government;
   weather: Weather;
+  /** Static geography. Read constantly, never written by the simulation. */
+  map: TownMap;
+  /** Derived from the map at load: routing tables, door index. Not serialised. */
+  nav: NavGraph;
   /** Monotonic counter feeding event ids. Part of state so replays match. */
   eventSeq: number;
   /** Runs applied, for idempotency across GitHub Action retries. */

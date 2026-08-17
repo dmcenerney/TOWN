@@ -87,8 +87,9 @@ const config = parseGenesisConfig(
   JSON.parse(readFileSync(new URL('../world/genesis.json', import.meta.url), 'utf8')),
 );
 if (args.seed) config.seed = args.seed;
+const map = JSON.parse(readFileSync(new URL('../world/map.json', import.meta.url), 'utf8'));
 
-const world = createWorld(config);
+const world = createWorld(config, map);
 const log = args.quiet ? () => {} : (s: string) => console.log(s);
 
 log(`\n  ${config.townName.toUpperCase()}  ·  soak  ·  seed ${config.seed}`);

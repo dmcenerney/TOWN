@@ -9,3 +9,6 @@ export * from './engine/tick.ts';
 export * from './engine/emit.ts';
 export * from './world/genesis.ts';
 export * from './core/hash.ts';
+export * from './types/map.ts';
+export * from './space/navgraph.ts';
+export * from './space/movement.ts';

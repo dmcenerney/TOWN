@@ -4,6 +4,7 @@ import { createWorld, parseGenesisConfig } from '../src/world/genesis.ts';
 import { advanceDays } from '../src/engine/tick.ts';
 import { hashWorld } from '../src/core/hash.ts';
 import genesisJson from '../../../world/genesis.json' with { type: 'json' };
+import mapJson from '../../../world/map.json' with { type: 'json' };
 import golden from './fixtures/golden.json' with { type: 'json' };
 
 /**
@@ -22,17 +23,17 @@ test('golden: the world seed has not drifted', () => {
 });
 
 test('golden: genesis is byte-stable', () => {
-  assert.equal(hashWorld(createWorld(config)), golden.genesis);
+  assert.equal(hashWorld(createWorld(config, mapJson)), golden.genesis);
 });
 
 test('golden: day 30 is byte-stable', () => {
-  const w = createWorld(config);
+  const w = createWorld(config, mapJson);
   advanceDays(w, 30, { strictInvariants: false, invariantInterval: 240 });
   assert.equal(hashWorld(w), golden.day30);
 });
 
 test('golden: Clara Ramirez founded this town', () => {
-  const w = createWorld(config);
+  const w = createWorld(config, mapJson);
   const founders = [...w.citizens.values()].map((c) => `${c.identity.firstName} ${c.identity.lastName}`);
   assert.ok(founders.includes('Clara Ramirez'), 'the founding roster changed');
   assert.equal(w.citizens.size, 25);

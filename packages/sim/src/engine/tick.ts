@@ -18,6 +18,7 @@ import { TICKS_PER_DAY, isDayBoundary, seasonOf, dayOf } from '../core/clock.ts'
 import { assertWorld, shouldCheck } from '../core/invariants.ts';
 import { rngFor } from '../core/rng.ts';
 import { emit } from './emit.ts';
+import { colocated, completeArrival } from '../space/movement.ts';
 
 export interface TickContext {
   world: World;
@@ -37,6 +38,7 @@ export interface Phase {
  * tick; institutions run last so payroll sees the day's finished work.
  */
 export const PHASES: Phase[] = [
+  { name: 'arrivals', run: arrivalsPhase },
   { name: 'weather', run: weatherPhase },
   { name: 'dayClose', run: dayClosePhase },
 ];
@@ -135,6 +137,49 @@ export function advanceToTick(
 }
 
 // --- built-in phases --------------------------------------------------------
+
+/**
+ * Journeys end here and nowhere else.
+ *
+ * An arrival is the moment geography turns into society: the citizen stops being
+ * a position on a polyline and starts being someone standing in a room with
+ * other people. Stage 6 hangs conversation and gossip off this event, which is
+ * why the witness list is computed now rather than reconstructed later.
+ */
+function arrivalsPhase(ctx: TickContext): void {
+  const { world } = ctx;
+  const arrived = ctx.due.filter((t) => t.type === 'arrival');
+  if (arrived.length === 0) return;
+  for (let i = ctx.due.length - 1; i >= 0; i--) {
+    if (ctx.due[i]!.type === 'arrival') ctx.due.splice(i, 1);
+  }
+
+  for (const task of arrived) {
+    if (task.type !== 'arrival') continue;
+    const c = world.citizens.get(task.citizenId);
+    // A citizen who died or was rerouted mid-journey has a stale arrival waiting.
+    if (!c || !c.alive || c.location.kind !== 'travelling') continue;
+    if (c.location.arriveTick !== world.tick) continue;
+
+    const { enteredBuilding, node } = completeArrival(world, c);
+    const building = enteredBuilding ? world.buildings.get(enteredBuilding) : null;
+
+    emit(world, ctx.events, {
+      type: 'arrived',
+      actors: [c.identity.id, enteredBuilding ?? node],
+      locationId: enteredBuilding ?? node,
+      visibility: 'colocated',
+      importance: 0.03,
+      witnesses: colocated(world, c),
+      payload: {
+        node,
+        building: enteredBuilding,
+        turnedAway: enteredBuilding === null && world.nav.doorOf.has(node),
+      },
+      visual: { effect: building ? 'enter_building' : 'stop_outdoors' },
+    });
+  }
+}
 
 function weatherPhase(ctx: TickContext): void {
   const { world } = ctx;

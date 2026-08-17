@@ -1,0 +1,1626 @@
+{
+ "name": "Alder Bend",
+ "version": "1.0",
+ "bounds": {
+  "width": 420,
+  "height": 300
+ },
+ "water": [
+  [
+   {
+    "x": 420,
+    "y": 150
+   },
+   {
+    "x": 396,
+    "y": 176
+   },
+   {
+    "x": 380,
+    "y": 208
+   },
+   {
+    "x": 352,
+    "y": 276
+   },
+   {
+    "x": 300,
+    "y": 292
+   },
+   {
+    "x": 232,
+    "y": 296
+   },
+   {
+    "x": 150,
+    "y": 292
+   },
+   {
+    "x": 60,
+    "y": 298
+   },
+   {
+    "x": 0,
+    "y": 296
+   }
+  ]
+ ],
+ "greens": [
+  {
+   "position": {
+    "x": 246,
+    "y": 100
+   },
+   "radius": 20
+  },
+  {
+   "position": {
+    "x": 96,
+    "y": 40
+   },
+   "radius": 16
+  }
+ ],
+ "roads": [
+  {
+   "id": "mill_rd",
+   "name": "Mill Road",
+   "nodeIds": [
+    "n_mill_rd_0",
+    "n_mill_rd_1",
+    "n_mill_rd_2",
+    "n_mill_rd_3",
+    "n_mill_rd_4",
+    "n_mill_rd_5",
+    "n_mill_rd_6"
+   ],
+   "width": 9
+  },
+  {
+   "id": "west_way",
+   "name": "West Way",
+   "nodeIds": [
+    "n_west_way_0",
+    "n_west_way_1",
+    "n_west_way_2",
+    "n_west_way_3",
+    "n_west_way_4"
+   ],
+   "width": 8
+  },
+  {
+   "id": "east_way",
+   "name": "East Way",
+   "nodeIds": [
+    "n_east_way_0",
+    "n_east_way_1",
+    "n_east_way_2",
+    "n_east_way_3",
+    "n_east_way_4",
+    "n_east_way_5"
+   ],
+   "width": 8
+  },
+  {
+   "id": "willow_row",
+   "name": "Willow Row",
+   "nodeIds": [
+    "n_willow_row_0",
+    "n_willow_row_1",
+    "n_west_way_0",
+    "n_willow_row_3",
+    "n_willow_row_4",
+    "n_mill_rd_1",
+    "n_willow_row_6",
+    "n_willow_row_7",
+    "n_east_way_0",
+    "n_willow_row_9"
+   ],
+   "width": 8
+  },
+  {
+   "id": "main_st",
+   "name": "Main Street",
+   "nodeIds": [
+    "n_main_st_0",
+    "n_main_st_1",
+    "n_west_way_2",
+    "n_main_st_3",
+    "n_main_st_4",
+    "n_mill_rd_3",
+    "n_main_st_6",
+    "n_main_st_7",
+    "n_east_way_2",
+    "n_main_st_9",
+    "n_main_st_10"
+   ],
+   "width": 10
+  },
+  {
+   "id": "river_ln",
+   "name": "River Lane",
+   "nodeIds": [
+    "n_river_ln_0",
+    "n_west_way_4",
+    "n_river_ln_2",
+    "n_river_ln_3",
+    "n_mill_rd_5",
+    "n_river_ln_5",
+    "n_river_ln_6",
+    "n_east_way_5",
+    "n_river_ln_8"
+   ],
+   "width": 8
+  }
+ ],
+ "nodes": [
+  {
+   "id": "n_mill_rd_0",
+   "position": {
+    "x": 210,
+    "y": 40
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_mill_rd_1",
+   "position": {
+    "x": 210,
+    "y": 70
+   },
+   "kind": "junction"
+  },
+  {
+   "id": "n_mill_rd_2",
+   "position": {
+    "x": 210,
+    "y": 110
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_mill_rd_3",
+   "position": {
+    "x": 210,
+    "y": 150
+   },
+   "kind": "junction"
+  },
+  {
+   "id": "n_mill_rd_4",
+   "position": {
+    "x": 210,
+    "y": 185
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_mill_rd_5",
+   "position": {
+    "x": 210,
+    "y": 230
+   },
+   "kind": "junction"
+  },
+  {
+   "id": "n_mill_rd_6",
+   "position": {
+    "x": 210,
+    "y": 262
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_west_way_0",
+   "position": {
+    "x": 100,
+    "y": 70
+   },
+   "kind": "junction"
+  },
+  {
+   "id": "n_west_way_1",
+   "position": {
+    "x": 100,
+    "y": 105
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_west_way_2",
+   "position": {
+    "x": 100,
+    "y": 150
+   },
+   "kind": "junction"
+  },
+  {
+   "id": "n_west_way_3",
+   "position": {
+    "x": 100,
+    "y": 195
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_west_way_4",
+   "position": {
+    "x": 100,
+    "y": 230
+   },
+   "kind": "junction"
+  },
+  {
+   "id": "n_east_way_0",
+   "position": {
+    "x": 320,
+    "y": 70
+   },
+   "kind": "junction"
+  },
+  {
+   "id": "n_east_way_1",
+   "position": {
+    "x": 320,
+    "y": 110
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_east_way_2",
+   "position": {
+    "x": 320,
+    "y": 150
+   },
+   "kind": "junction"
+  },
+  {
+   "id": "n_east_way_3",
+   "position": {
+    "x": 320,
+    "y": 190
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_east_way_4",
+   "position": {
+    "x": 320,
+    "y": 215
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_east_way_5",
+   "position": {
+    "x": 320,
+    "y": 230
+   },
+   "kind": "junction"
+  },
+  {
+   "id": "n_willow_row_0",
+   "position": {
+    "x": 45,
+    "y": 70
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_willow_row_1",
+   "position": {
+    "x": 70,
+    "y": 70
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_willow_row_3",
+   "position": {
+    "x": 140,
+    "y": 70
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_willow_row_4",
+   "position": {
+    "x": 175,
+    "y": 70
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_willow_row_6",
+   "position": {
+    "x": 250,
+    "y": 70
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_willow_row_7",
+   "position": {
+    "x": 285,
+    "y": 70
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_willow_row_9",
+   "position": {
+    "x": 360,
+    "y": 70
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_main_st_0",
+   "position": {
+    "x": 40,
+    "y": 150
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_main_st_1",
+   "position": {
+    "x": 70,
+    "y": 150
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_main_st_3",
+   "position": {
+    "x": 135,
+    "y": 150
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_main_st_4",
+   "position": {
+    "x": 170,
+    "y": 150
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_main_st_6",
+   "position": {
+    "x": 250,
+    "y": 150
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_main_st_7",
+   "position": {
+    "x": 285,
+    "y": 150
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_main_st_9",
+   "position": {
+    "x": 355,
+    "y": 150
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_main_st_10",
+   "position": {
+    "x": 380,
+    "y": 150
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_river_ln_0",
+   "position": {
+    "x": 60,
+    "y": 230
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_river_ln_2",
+   "position": {
+    "x": 140,
+    "y": 230
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_river_ln_3",
+   "position": {
+    "x": 175,
+    "y": 230
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_river_ln_5",
+   "position": {
+    "x": 250,
+    "y": 230
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_river_ln_6",
+   "position": {
+    "x": 285,
+    "y": 230
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_river_ln_8",
+   "position": {
+    "x": 358,
+    "y": 230
+   },
+   "kind": "street"
+  },
+  {
+   "id": "n_square",
+   "position": {
+    "x": 224,
+    "y": 124
+   },
+   "kind": "plaza"
+  },
+  {
+   "id": "n_door_01",
+   "position": {
+    "x": 204.9,
+    "y": 110.9
+   },
+   "kind": "door",
+   "buildingId": "bld_town_hall"
+  },
+  {
+   "id": "n_door_02",
+   "position": {
+    "x": 158.7,
+    "y": 128.6
+   },
+   "kind": "door",
+   "buildingId": "bld_gazette"
+  },
+  {
+   "id": "n_door_03",
+   "position": {
+    "x": 287.8,
+    "y": 128.9
+   },
+   "kind": "door",
+   "buildingId": "bld_bank"
+  },
+  {
+   "id": "n_door_04",
+   "position": {
+    "x": 232.5,
+    "y": 111.1
+   },
+   "kind": "door",
+   "buildingId": "bld_square"
+  },
+  {
+   "id": "n_door_05",
+   "position": {
+    "x": 133.8,
+    "y": 164.1
+   },
+   "kind": "door",
+   "buildingId": "bld_market"
+  },
+  {
+   "id": "n_door_06",
+   "position": {
+    "x": 259.9,
+    "y": 167.9
+   },
+   "kind": "door",
+   "buildingId": "bld_sycamore"
+  },
+  {
+   "id": "n_door_07",
+   "position": {
+    "x": 203,
+    "y": 185.5
+   },
+   "kind": "door",
+   "buildingId": "bld_bar"
+  },
+  {
+   "id": "n_door_08",
+   "position": {
+    "x": 86.1,
+    "y": 183.1
+   },
+   "kind": "door",
+   "buildingId": "bld_clinic"
+  },
+  {
+   "id": "n_door_09",
+   "position": {
+    "x": 353.5,
+    "y": 166.1
+   },
+   "kind": "door",
+   "buildingId": "bld_vacant"
+  },
+  {
+   "id": "n_door_10",
+   "position": {
+    "x": 46.3,
+    "y": 58.5
+   },
+   "kind": "door",
+   "buildingId": "bld_farm"
+  },
+  {
+   "id": "n_door_11",
+   "position": {
+    "x": 337.3,
+    "y": 232.7
+   },
+   "kind": "door",
+   "buildingId": "bld_factory"
+  },
+  {
+   "id": "n_door_12",
+   "position": {
+    "x": 79,
+    "y": 105.7
+   },
+   "kind": "door",
+   "buildingId": "bld_school"
+  },
+  {
+   "id": "n_door_13",
+   "position": {
+    "x": 140,
+    "y": 50.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_01"
+  },
+  {
+   "id": "n_door_14",
+   "position": {
+    "x": 175,
+    "y": 50.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_02"
+  },
+  {
+   "id": "n_door_15",
+   "position": {
+    "x": 250,
+    "y": 50.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_03"
+  },
+  {
+   "id": "n_door_16",
+   "position": {
+    "x": 285,
+    "y": 50.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_04"
+  },
+  {
+   "id": "n_door_17",
+   "position": {
+    "x": 360,
+    "y": 50.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_05"
+  },
+  {
+   "id": "n_door_18",
+   "position": {
+    "x": 140,
+    "y": 89.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_06"
+  },
+  {
+   "id": "n_door_19",
+   "position": {
+    "x": 285,
+    "y": 89.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_07"
+  },
+  {
+   "id": "n_door_20",
+   "position": {
+    "x": 360,
+    "y": 89.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_08"
+  },
+  {
+   "id": "n_door_21",
+   "position": {
+    "x": 60,
+    "y": 210.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_09"
+  },
+  {
+   "id": "n_door_22",
+   "position": {
+    "x": 140,
+    "y": 210.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_10"
+  },
+  {
+   "id": "n_door_23",
+   "position": {
+    "x": 175,
+    "y": 210.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_11"
+  },
+  {
+   "id": "n_door_24",
+   "position": {
+    "x": 250,
+    "y": 210.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_12"
+  },
+  {
+   "id": "n_door_25",
+   "position": {
+    "x": 285,
+    "y": 210.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_13"
+  },
+  {
+   "id": "n_door_26",
+   "position": {
+    "x": 60,
+    "y": 249.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_14"
+  },
+  {
+   "id": "n_door_27",
+   "position": {
+    "x": 100,
+    "y": 249.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_15"
+  },
+  {
+   "id": "n_door_28",
+   "position": {
+    "x": 140,
+    "y": 249.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_16"
+  },
+  {
+   "id": "n_door_29",
+   "position": {
+    "x": 175,
+    "y": 249.5
+   },
+   "kind": "door",
+   "buildingId": "bld_home_17"
+  }
+ ],
+ "edges": [
+  {
+   "a": "n_mill_rd_0",
+   "b": "n_mill_rd_1",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_mill_rd_1",
+   "b": "n_mill_rd_2",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_mill_rd_2",
+   "b": "n_mill_rd_3",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_mill_rd_3",
+   "b": "n_mill_rd_4",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_mill_rd_4",
+   "b": "n_mill_rd_5",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_mill_rd_5",
+   "b": "n_mill_rd_6",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_west_way_0",
+   "b": "n_west_way_1",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_west_way_1",
+   "b": "n_west_way_2",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_west_way_2",
+   "b": "n_west_way_3",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_west_way_3",
+   "b": "n_west_way_4",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_east_way_0",
+   "b": "n_east_way_1",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_east_way_1",
+   "b": "n_east_way_2",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_east_way_2",
+   "b": "n_east_way_3",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_east_way_3",
+   "b": "n_east_way_4",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_east_way_4",
+   "b": "n_east_way_5",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_willow_row_0",
+   "b": "n_willow_row_1",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_willow_row_1",
+   "b": "n_west_way_0",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_west_way_0",
+   "b": "n_willow_row_3",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_willow_row_3",
+   "b": "n_willow_row_4",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_willow_row_4",
+   "b": "n_mill_rd_1",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_mill_rd_1",
+   "b": "n_willow_row_6",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_willow_row_6",
+   "b": "n_willow_row_7",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_willow_row_7",
+   "b": "n_east_way_0",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_east_way_0",
+   "b": "n_willow_row_9",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_main_st_0",
+   "b": "n_main_st_1",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_main_st_1",
+   "b": "n_west_way_2",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_west_way_2",
+   "b": "n_main_st_3",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_main_st_3",
+   "b": "n_main_st_4",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_main_st_4",
+   "b": "n_mill_rd_3",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_mill_rd_3",
+   "b": "n_main_st_6",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_main_st_6",
+   "b": "n_main_st_7",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_main_st_7",
+   "b": "n_east_way_2",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_east_way_2",
+   "b": "n_main_st_9",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_main_st_9",
+   "b": "n_main_st_10",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_river_ln_0",
+   "b": "n_west_way_4",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_west_way_4",
+   "b": "n_river_ln_2",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_river_ln_2",
+   "b": "n_river_ln_3",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_river_ln_3",
+   "b": "n_mill_rd_5",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_mill_rd_5",
+   "b": "n_river_ln_5",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_river_ln_5",
+   "b": "n_river_ln_6",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_river_ln_6",
+   "b": "n_east_way_5",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_east_way_5",
+   "b": "n_river_ln_8",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_square",
+   "b": "n_mill_rd_3",
+   "speedFactor": 1
+  },
+  {
+   "a": "n_door_01",
+   "b": "n_mill_rd_2",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_02",
+   "b": "n_main_st_4",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_03",
+   "b": "n_main_st_7",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_04",
+   "b": "n_square",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_05",
+   "b": "n_main_st_3",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_06",
+   "b": "n_main_st_6",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_07",
+   "b": "n_mill_rd_4",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_08",
+   "b": "n_west_way_3",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_09",
+   "b": "n_main_st_9",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_10",
+   "b": "n_willow_row_0",
+   "speedFactor": 0.7
+  },
+  {
+   "a": "n_door_11",
+   "b": "n_east_way_4",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_12",
+   "b": "n_west_way_1",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_13",
+   "b": "n_willow_row_3",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_14",
+   "b": "n_willow_row_4",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_15",
+   "b": "n_willow_row_6",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_16",
+   "b": "n_willow_row_7",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_17",
+   "b": "n_willow_row_9",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_18",
+   "b": "n_willow_row_3",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_19",
+   "b": "n_willow_row_7",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_20",
+   "b": "n_willow_row_9",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_21",
+   "b": "n_river_ln_0",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_22",
+   "b": "n_river_ln_2",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_23",
+   "b": "n_river_ln_3",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_24",
+   "b": "n_river_ln_5",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_25",
+   "b": "n_river_ln_6",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_26",
+   "b": "n_river_ln_0",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_27",
+   "b": "n_west_way_4",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_28",
+   "b": "n_river_ln_2",
+   "speedFactor": 0.85
+  },
+  {
+   "a": "n_door_29",
+   "b": "n_river_ln_3",
+   "speedFactor": 0.85
+  }
+ ],
+ "buildings": [
+  {
+   "id": "bld_town_hall",
+   "type": "town_hall",
+   "name": "Alder Bend Town Hall",
+   "position": {
+    "x": 186,
+    "y": 112
+   },
+   "footprint": {
+    "x": 34,
+    "y": 22
+   },
+   "entranceNode": "n_door_01",
+   "capacity": 60,
+   "openingHours": [
+    8,
+    18
+   ],
+   "street": "Mill Road"
+  },
+  {
+   "id": "bld_gazette",
+   "type": "newspaper",
+   "name": "The Alder Bend Gazette",
+   "position": {
+    "x": 152,
+    "y": 120
+   },
+   "footprint": {
+    "x": 22,
+    "y": 16
+   },
+   "entranceNode": "n_door_02",
+   "capacity": 8,
+   "openingHours": [
+    7,
+    19
+   ],
+   "street": "Main Street"
+  },
+  {
+   "id": "bld_bank",
+   "type": "bank",
+   "name": "Bend Savings & Loan",
+   "position": {
+    "x": 290,
+    "y": 118
+   },
+   "footprint": {
+    "x": 24,
+    "y": 18
+   },
+   "entranceNode": "n_door_03",
+   "capacity": 14,
+   "openingHours": [
+    9,
+    16
+   ],
+   "street": "Main Street"
+  },
+  {
+   "id": "bld_square",
+   "type": "square",
+   "name": "The Public Square",
+   "position": {
+    "x": 246,
+    "y": 100
+   },
+   "footprint": {
+    "x": 36,
+    "y": 26
+   },
+   "entranceNode": "n_door_04",
+   "capacity": 200,
+   "openingHours": null,
+   "street": "Mill Road"
+  },
+  {
+   "id": "bld_market",
+   "type": "market",
+   "name": "Miller's Market",
+   "position": {
+    "x": 132,
+    "y": 176
+   },
+   "footprint": {
+    "x": 28,
+    "y": 20
+   },
+   "entranceNode": "n_door_05",
+   "capacity": 25,
+   "openingHours": [
+    7,
+    19
+   ],
+   "street": "Main Street"
+  },
+  {
+   "id": "bld_sycamore",
+   "type": "restaurant",
+   "name": "The Sycamore",
+   "position": {
+    "x": 268,
+    "y": 178
+   },
+   "footprint": {
+    "x": 26,
+    "y": 20
+   },
+   "entranceNode": "n_door_06",
+   "capacity": 34,
+   "openingHours": [
+    11,
+    22
+   ],
+   "street": "Main Street"
+  },
+  {
+   "id": "bld_bar",
+   "type": "bar",
+   "name": "The Drowned Alder",
+   "position": {
+    "x": 190,
+    "y": 186
+   },
+   "footprint": {
+    "x": 22,
+    "y": 18
+   },
+   "entranceNode": "n_door_07",
+   "capacity": 30,
+   "openingHours": [
+    16,
+    24
+   ],
+   "street": "Mill Road"
+  },
+  {
+   "id": "bld_clinic",
+   "type": "clinic",
+   "name": "Alder Bend Clinic",
+   "position": {
+    "x": 74,
+    "y": 176
+   },
+   "footprint": {
+    "x": 26,
+    "y": 20
+   },
+   "entranceNode": "n_door_08",
+   "capacity": 16,
+   "openingHours": [
+    8,
+    18
+   ],
+   "street": "West Way"
+  },
+  {
+   "id": "bld_vacant",
+   "type": "vacant_commercial",
+   "name": "The Old Coach House",
+   "position": {
+    "x": 352,
+    "y": 178
+   },
+   "footprint": {
+    "x": 24,
+    "y": 20
+   },
+   "entranceNode": "n_door_09",
+   "capacity": 20,
+   "openingHours": null,
+   "street": "Main Street"
+  },
+  {
+   "id": "bld_farm",
+   "type": "farm",
+   "name": "Hale Farm",
+   "position": {
+    "x": 52,
+    "y": 40
+   },
+   "footprint": {
+    "x": 46,
+    "y": 34
+   },
+   "entranceNode": "n_door_10",
+   "capacity": 18,
+   "openingHours": [
+    5,
+    19
+   ],
+   "street": "Willow Row"
+  },
+  {
+   "id": "bld_factory",
+   "type": "factory",
+   "name": "Franklin Manufacturing",
+   "position": {
+    "x": 356,
+    "y": 244
+   },
+   "footprint": {
+    "x": 44,
+    "y": 32
+   },
+   "entranceNode": "n_door_11",
+   "capacity": 40,
+   "openingHours": [
+    6,
+    20
+   ],
+   "street": "East Way"
+  },
+  {
+   "id": "bld_school",
+   "type": "school",
+   "name": "Alder Bend School",
+   "position": {
+    "x": 62,
+    "y": 106
+   },
+   "footprint": {
+    "x": 30,
+    "y": 22
+   },
+   "entranceNode": "n_door_12",
+   "capacity": 60,
+   "openingHours": [
+    8,
+    16
+   ],
+   "street": "West Way"
+  },
+  {
+   "id": "bld_home_01",
+   "type": "home",
+   "name": "Number 1",
+   "position": {
+    "x": 140,
+    "y": 42
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_13",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "Willow Row"
+  },
+  {
+   "id": "bld_home_02",
+   "type": "home",
+   "name": "Number 2",
+   "position": {
+    "x": 175,
+    "y": 42
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_14",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "Willow Row"
+  },
+  {
+   "id": "bld_home_03",
+   "type": "home",
+   "name": "Number 3",
+   "position": {
+    "x": 250,
+    "y": 42
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_15",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "Willow Row"
+  },
+  {
+   "id": "bld_home_04",
+   "type": "home",
+   "name": "Number 4",
+   "position": {
+    "x": 285,
+    "y": 42
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_16",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "Willow Row"
+  },
+  {
+   "id": "bld_home_05",
+   "type": "home",
+   "name": "Number 5",
+   "position": {
+    "x": 360,
+    "y": 42
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_17",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "Willow Row"
+  },
+  {
+   "id": "bld_home_06",
+   "type": "home",
+   "name": "Number 6",
+   "position": {
+    "x": 140,
+    "y": 98
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_18",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "Willow Row"
+  },
+  {
+   "id": "bld_home_07",
+   "type": "home",
+   "name": "Number 7",
+   "position": {
+    "x": 285,
+    "y": 98
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_19",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "Willow Row"
+  },
+  {
+   "id": "bld_home_08",
+   "type": "home",
+   "name": "Number 8",
+   "position": {
+    "x": 360,
+    "y": 98
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_20",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "Willow Row"
+  },
+  {
+   "id": "bld_home_09",
+   "type": "home",
+   "name": "Number 9",
+   "position": {
+    "x": 60,
+    "y": 202
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_21",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "River Lane"
+  },
+  {
+   "id": "bld_home_10",
+   "type": "home",
+   "name": "Number 10",
+   "position": {
+    "x": 140,
+    "y": 202
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_22",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "River Lane"
+  },
+  {
+   "id": "bld_home_11",
+   "type": "home",
+   "name": "Number 11",
+   "position": {
+    "x": 175,
+    "y": 202
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_23",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "River Lane"
+  },
+  {
+   "id": "bld_home_12",
+   "type": "home",
+   "name": "Number 12",
+   "position": {
+    "x": 250,
+    "y": 202
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_24",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "River Lane"
+  },
+  {
+   "id": "bld_home_13",
+   "type": "home",
+   "name": "Number 13",
+   "position": {
+    "x": 285,
+    "y": 202
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_25",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "River Lane"
+  },
+  {
+   "id": "bld_home_14",
+   "type": "home",
+   "name": "Number 14",
+   "position": {
+    "x": 60,
+    "y": 258
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_26",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "River Lane"
+  },
+  {
+   "id": "bld_home_15",
+   "type": "home",
+   "name": "Number 15",
+   "position": {
+    "x": 100,
+    "y": 258
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_27",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "River Lane"
+  },
+  {
+   "id": "bld_home_16",
+   "type": "home",
+   "name": "Number 16",
+   "position": {
+    "x": 140,
+    "y": 258
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_28",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "River Lane"
+  },
+  {
+   "id": "bld_home_17",
+   "type": "home",
+   "name": "Number 17",
+   "position": {
+    "x": 175,
+    "y": 258
+   },
+   "footprint": {
+    "x": 16,
+    "y": 13
+   },
+   "entranceNode": "n_door_29",
+   "capacity": 6,
+   "openingHours": null,
+   "street": "River Lane"
+  }
+ ]
+}

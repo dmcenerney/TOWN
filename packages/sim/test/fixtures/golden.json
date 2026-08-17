@@ -1,6 +1,6 @@
 {
   "note": "Golden replay hashes. A change here must be deliberate and explained.",
   "seed": "alder-bend-0067",
-  "genesis": "849c6b81e4652182a82579da432aeead47c424a81956c9df8326e4fa4ce8d1fe",
-  "day30": "a231a64ca9ab223f72dffc155ca3ae741fd06ee0e5110213ef9fb435c10f0a78"
+  "genesis": "61c27951bcbcf22b97659bfeb222d4f2d61833ef68300fdd8525ea51e9b1910d",
+  "day30": "76a8286994162e58f11023d7579063f8fad316e20d738d3d4f4d0522dd8b06bb"
 }
