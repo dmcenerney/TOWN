@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Alder Bend</title>
+<!--
+  THE OBSERVER
+
+  One file, no build step, no dependencies. It loads the manifest, works out
+  which simulated minute the town is currently showing, fetches that hour's
+  block, and draws it. Every position on screen is computed by the same
+  arithmetic the simulation uses — arc-length along a recorded polyline — so
+  what you see is where the citizen actually was.
+
+  There is no way to influence anything from this page. There is no write path
+  to look for. Alder Bend is observed, not played.
+-->
+<style>
+  :root {
+    --ink: #12140f;
+    --paper: #e8e4d9;
+    --line: rgba(18,20,15,.16);
+    --accent: #8c4a2f;
+    --dim: #6d6a5f;
+    font-synthesis: none;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; overflow:hidden; background:var(--ink); }
+  body {
+    font: 400 14px/1.45 ui-monospace, "SF Mono", Menlo, monospace;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    touch-action: none;
+  }
+  canvas { display:block; width:100%; height:100%; touch-action:none; }
+
+  .hud {
+    position:fixed; top:0; left:0; right:0;
+    padding: max(10px, env(safe-area-inset-top)) 14px 10px;
+    display:flex; align-items:baseline; gap:16px;
+    background: linear-gradient(180deg, rgba(18,20,15,.82), transparent);
+    color: var(--paper); pointer-events:none; z-index:5;
+  }
+  .hud b { font-weight:600; letter-spacing:.14em; text-transform:uppercase; font-size:11px; }
+  .hud .clock { font-size:19px; font-variant-numeric:tabular-nums; }
+  .hud .meta { font-size:11px; color:#b9b4a5; letter-spacing:.04em; }
+  .hud .right { margin-left:auto; text-align:right; font-size:11px; color:#b9b4a5; }
+
+  .ticker {
+    position:fixed; left:0; right:0; bottom:0; z-index:5;
+    padding: 8px 14px calc(8px + env(safe-area-inset-bottom));
+    background: linear-gradient(0deg, rgba(18,20,15,.86), transparent);
+    color:#cfcabb; font-size:11.5px; pointer-events:none;
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .ticker div { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ticker span { color:#8a8578; margin-right:8px; font-variant-numeric:tabular-nums; }
+
+  .panel {
+    position:fixed; z-index:10; background:var(--paper); color:var(--ink);
+    border-radius:2px; box-shadow:0 18px 50px rgba(0,0,0,.45);
+    padding:18px 20px 20px; width:min(320px, calc(100vw - 24px));
+    top:60px; right:12px; display:none;
+  }
+  @media (max-width:640px) {
+    .panel { top:auto; bottom:0; left:0; right:0; width:100%;
+             border-radius:12px 12px 0 0; padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
+  }
+  .panel.open { display:block; }
+  .panel h2 { font-size:16px; font-weight:600; letter-spacing:.02em; margin-bottom:2px; }
+  .panel .sub { font-size:11px; color:var(--dim); letter-spacing:.08em; text-transform:uppercase; margin-bottom:14px; }
+  .panel dl { display:grid; grid-template-columns:auto 1fr; gap:5px 14px; font-size:12.5px; }
+  .panel dt { color:var(--dim); }
+  .panel dd { text-align:right; font-variant-numeric:tabular-nums; }
+  .panel .close { position:absolute; top:12px; right:14px; font-size:18px; color:var(--dim); cursor:pointer; line-height:1; }
+  .bar { height:3px; background:var(--line); margin-top:3px; position:relative; }
+  .bar i { position:absolute; inset:0 auto 0 0; background:var(--accent); }
+
+  .note { position:fixed; inset:0; display:grid; place-items:center; color:var(--paper);
+          font-size:13px; letter-spacing:.06em; z-index:20; background:var(--ink); text-align:center; padding:24px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="hud">
+  <b>Alder Bend</b>
+  <span class="clock" id="clock">—</span>
+  <span class="meta" id="date"></span>
+  <span class="right" id="weather"></span>
+</div>
+
+<div class="ticker" id="ticker"></div>
+
+<div class="panel" id="panel">
+  <div class="close" onclick="closePanel()">×</div>
+  <h2 id="pname"></h2>
+  <div class="sub" id="psub"></div>
+  <dl id="pbody"></dl>
+</div>
+
+<div class="note" id="note">loading Alder Bend…</div>
+
+<script>
+'use strict';
+
+const BASE = new URL('.', location.href);
+const $ = (id) => document.getElementById(id);
+const canvas = $('c');
+const ctx = canvas.getContext('2d');
+
+const state = {
+  map: null, manifest: null, roster: new Map(),
+  blocks: new Map(), simMinute: 0, block: null,
+  camera: { x: 210, y: 150, scale: 2.6 },
+  selected: null, agents: new Map(), buildings: new Map(),
+};
+
+const BUILDING_COLOUR = {
+  home:'#a89b84', farm:'#8d9a6a', market:'#b08a52', restaurant:'#a2643f',
+  factory:'#7b7166', bank:'#8f8a76', newspaper:'#9b9382', town_hall:'#8a8778',
+  bar:'#96603f', clinic:'#9aa39b', school:'#9d9a86', vacant_commercial:'#8b8578',
+  square:'#93a077',
+};
+const COLOUR = (t) => BUILDING_COLOUR[t] || '#8b8578';
+
+// --- loading ---------------------------------------------------------------
+
+async function json(path) {
+  const res = await fetch(new URL(path, BASE), { cache: 'no-cache' });
+  if (!res.ok) throw new Error(path + ' → ' + res.status);
+  return res.json();
+}
+
+async function boot() {
+  try {
+    const [map, manifest, roster] = await Promise.all([
+      json('world/map.json'), json('stream/manifest.json'), json('stream/roster.json'),
+    ]);
+    state.map = map;
+    state.manifest = manifest;
+    for (const r of roster) state.roster.set(r.id, r);
+    for (const b of map.buildings) state.buildings.set(b.id, b);
+
+    fitCamera();
+    $('note').style.display = 'none';
+    requestAnimationFrame(frame);
+  } catch (err) {
+    $('note').textContent = 'Alder Bend is not broadcasting yet — ' + err.message;
+  }
+}
+
+function blockKey(minute) {
+  const hour = Math.floor(minute / 60);
+  const day = Math.floor(hour / 24);
+  return 'stream/d' + String(day).padStart(5,'0') + '/h' + String(hour % 24).padStart(2,'0') + '.json';
+}
+
+function blockFor(minute) {
+  const key = blockKey(minute);
+  if (state.blocks.has(key)) return state.blocks.get(key);
+  state.blocks.set(key, null);            // in flight
+  json(key).then((b) => state.blocks.set(key, b)).catch(() => state.blocks.set(key, 'missing'));
+  return null;
+}
+
+// --- the clock -------------------------------------------------------------
+// One mapping, shared by every viewer. No protocol, no server, no drift.
+
+function currentSimMinute() {
+  const m = state.manifest;
+  const elapsed = (Date.now() - m.broadcastAnchor.realMs) / 1000;
+  const raw = m.broadcastAnchor.simMinute + elapsed * m.simMinutesPerRealSecond;
+  return Math.min(m.availableTo, Math.max(m.availableFrom, raw));
+}
+
+// --- geometry --------------------------------------------------------------
+
+function pointAlong(path, u) {
+  if (!path.length) return { x:0, y:0 };
+  if (path.length === 1 || u <= 0) return path[0];
+  if (u >= 1) return path[path.length - 1];
+  const spans = []; let total = 0;
+  for (let i = 1; i < path.length; i++) {
+    const d = Math.hypot(path[i].x - path[i-1].x, path[i].y - path[i-1].y);
+    spans.push(d); total += d;
+  }
+  if (!total) return path[0];
+  let want = u * total;
+  for (let i = 0; i < spans.length; i++) {
+    if (want <= spans[i] || i === spans.length - 1) {
+      const t = spans[i] ? Math.min(1, want / spans[i]) : 0;
+      const a = path[i], b = path[i+1];
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+    }
+    want -= spans[i];
+  }
+  return path[path.length - 1];
+}
+
+/** Where everybody is, at this exact fractional minute. */
+function resolveAgents(block, minute) {
+  const out = new Map();
+  for (const k of block.keyframe) {
+    out.set(k.id, { id:k.id, x:k.x, y:k.y, activity:k.activity, inside:k.inside, mood:k.mood, moving:false });
+  }
+  for (const s of block.segments) {
+    if (minute < s.departTick) continue;
+    const a = out.get(s.id); if (!a) continue;
+    const u = Math.min(1, (minute - s.departTick) / (s.arriveTick - s.departTick));
+    const p = pointAlong(s.path, u);
+    a.x = p.x; a.y = p.y;
+    a.moving = u < 1;
+    a.activity = u < 1 ? 'travelling' : a.activity;
+    if (u >= 1) a.inside = null;
+  }
+  for (const sp of block.activities) {
+    if (minute < sp.startTick || minute > sp.endTick) continue;
+    const a = out.get(sp.id); if (!a) continue;
+    if (!a.moving) a.activity = sp.kind;
+  }
+  return out;
+}
+
+// --- camera ----------------------------------------------------------------
+
+function fitCamera() {
+  const b = state.map.bounds;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  state.camera.scale = Math.min(w / b.width, h / b.height) * 0.92;
+  state.camera.x = b.width / 2;
+  state.camera.y = b.height / 2;
+  void dpr;
+}
+
+function worldToScreen(x, y) {
+  const c = state.camera;
+  return {
+    x: (x - c.x) * c.scale + canvas.clientWidth / 2,
+    y: (y - c.y) * c.scale + canvas.clientHeight / 2,
+  };
+}
+function screenToWorld(sx, sy) {
+  const c = state.camera;
+  return {
+    x: (sx - canvas.clientWidth / 2) / c.scale + c.x,
+    y: (sy - canvas.clientHeight / 2) / c.scale + c.y,
+  };
+}
+
+// --- drawing ---------------------------------------------------------------
+
+function nightAlpha(minute) {
+  const h = (minute / 60) % 24;
+  if (h >= 7 && h < 18) return 0;
+  if (h >= 18 && h < 21) return (h - 18) / 3 * 0.55;
+  if (h >= 5 && h < 7) return (7 - h) / 2 * 0.55;
+  return 0.55;
+}
+
+function draw(minute, block) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+    canvas.width = w * dpr; canvas.height = h * dpr;
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+
+  ctx.fillStyle = '#20241b';
+  ctx.fillRect(0, 0, w, h);
+
+  const s = state.camera.scale;
+  const map = state.map;
+
+  // the river
+  ctx.strokeStyle = '#2c4152'; ctx.lineWidth = Math.max(3, 9 * s); ctx.lineCap = 'round';
+  for (const line of map.water) {
+    ctx.beginPath();
+    line.forEach((p, i) => { const q = worldToScreen(p.x, p.y); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); });
+    ctx.stroke();
+  }
+
+  // greens
+  ctx.fillStyle = '#2f3a25';
+  for (const g of map.greens) {
+    const q = worldToScreen(g.position.x, g.position.y);
+    ctx.beginPath(); ctx.arc(q.x, q.y, g.radius * s, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // streets
+  const nodeById = new Map(map.nodes.map((n) => [n.id, n]));
+  ctx.strokeStyle = '#3a3d31'; ctx.lineCap = 'round';
+  for (const road of map.roads) {
+    ctx.lineWidth = Math.max(1.5, road.width * s);
+    ctx.beginPath();
+    road.nodeIds.forEach((id, i) => {
+      const n = nodeById.get(id); if (!n) return;
+      const q = worldToScreen(n.position.x, n.position.y);
+      i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y);
+    });
+    ctx.stroke();
+  }
+
+  // buildings
+  ctx.textAlign = 'center';
+  for (const b of map.buildings) {
+    const q = worldToScreen(b.position.x - b.footprint.x / 2, b.position.y - b.footprint.y / 2);
+    const bw = b.footprint.x * s, bh = b.footprint.y * s;
+    const vis = state.blockBuildings && state.blockBuildings.get(b.id);
+    const closed = vis && (vis.state === 'closed' || vis.state === 'derelict');
+
+    ctx.fillStyle = closed ? '#4a463e' : COLOUR(b.type);
+    ctx.globalAlpha = closed ? 0.55 : 1;
+    ctx.fillRect(q.x, q.y, bw, bh);
+    ctx.globalAlpha = 1;
+
+    // lit windows after dark
+    const night = nightAlpha(minute);
+    if (night > 0.2 && !closed) {
+      const occ = vis ? vis.occupants : 0;
+      if (occ > 0 || b.type === 'home') {
+        ctx.fillStyle = 'rgba(240,196,110,' + (0.25 + Math.min(0.5, occ * 0.12)) + ')';
+        ctx.fillRect(q.x + bw * 0.2, q.y + bh * 0.3, bw * 0.6, bh * 0.35);
+      }
+    }
+
+    if (s > 1.6 && b.type !== 'home') {
+      ctx.fillStyle = 'rgba(232,228,217,.72)';
+      ctx.font = '9px ui-monospace, monospace';
+      ctx.fillText(b.name, q.x + bw / 2, q.y - 4);
+    }
+  }
+
+  // night
+  const na = nightAlpha(minute);
+  if (na > 0) { ctx.fillStyle = 'rgba(10,14,30,' + na + ')'; ctx.fillRect(0, 0, w, h); }
+
+  // citizens
+  const r = Math.max(2.2, 2.4 * s);
+  for (const a of state.agents.values()) {
+    const q = worldToScreen(a.x, a.y);
+    if (q.x < -20 || q.y < -20 || q.x > w + 20 || q.y > h + 20) continue;
+    const sel = state.selected === a.id;
+
+    ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = a.inside ? 'rgba(226,214,186,.5)' : moodColour(a.mood);
+    ctx.fill();
+
+    if (sel) {
+      ctx.strokeStyle = '#e8e4d9'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(q.x, q.y, r + 4, 0, Math.PI * 2); ctx.stroke();
+    }
+    if (s > 2.4 && !a.inside) {
+      const person = state.roster.get(a.id);
+      if (person) {
+        ctx.fillStyle = 'rgba(232,228,217,.6)';
+        ctx.font = '8px ui-monospace, monospace';
+        ctx.fillText(person.name.split(' ')[0], q.x, q.y - r - 3);
+      }
+    }
+  }
+  void block;
+}
+
+function moodColour(m) {
+  const t = Math.max(0, Math.min(1, m ?? 0.5));
+  const r = Math.round(200 - t * 90), g = Math.round(120 + t * 90), b = Math.round(90 + t * 40);
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+// --- frame loop ------------------------------------------------------------
+
+function frame() {
+  const minute = currentSimMinute();
+  state.simMinute = minute;
+
+  const block = blockFor(minute);
+  if (block && block !== 'missing') {
+    state.block = block;
+    state.blockBuildings = state.blockBuildings || new Map();
+    for (const v of block.buildings) state.blockBuildings.set(v.id, v);
+    state.agents = resolveAgents(block, minute);
+    blockFor(minute + 60);            // prefetch the next hour
+  }
+
+  if (state.block) {
+    draw(minute, state.block);
+    updateHud(minute);
+  }
+  requestAnimationFrame(frame);
+}
+
+function updateHud(minute) {
+  const total = Math.floor(minute);
+  const day = Math.floor(total / 1440);
+  const hh = String(Math.floor((total % 1440) / 60)).padStart(2, '0');
+  const mm = String(total % 60).padStart(2, '0');
+  const WEEK = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  $('clock').textContent = hh + ':' + mm;
+  $('date').textContent = 'Day ' + day + ' · ' + WEEK[day % 7];
+  const wx = state.block ? state.block.weather : null;
+  $('weather').textContent = wx ? wx.condition + ' · ' + wx.temperatureC + '°C · ' + wx.season : '';
+
+  if (state.block) {
+    const recent = state.block.events
+      .filter((e) => e.tick <= minute)
+      .slice(-3)
+      .map((e) => '<div><span>' + String(Math.floor(e.tick % 1440 / 60)).padStart(2,'0') + ':' +
+        String(Math.floor(e.tick % 60)).padStart(2,'0') + '</span>' + esc(e.headline) + '</div>')
+      .join('');
+    $('ticker').innerHTML = recent;
+  }
+  if (state.selected) renderPanel();
+}
+
+const esc = (s) => s.replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+// --- inspector -------------------------------------------------------------
+
+function renderPanel() {
+  const id = state.selected;
+  const person = state.roster.get(id);
+  const agent = state.agents.get(id);
+  if (!person) return;
+  const where = agent && agent.inside ? (state.buildings.get(agent.inside) || {}).name : null;
+
+  $('pname').textContent = person.name;
+  $('psub').textContent = (person.job || 'unemployed') + ' · age ' + person.age;
+  $('pbody').innerHTML =
+    row('Household', person.household) +
+    row('Home', (state.buildings.get(person.home) || {}).name || '—') +
+    row('Doing', agent ? agent.activity.replace(/_/g, ' ') : '—') +
+    row('Where', where || (agent && agent.moving ? 'on the street' : 'outdoors')) +
+    row('Position', agent ? agent.x.toFixed(0) + ', ' + agent.y.toFixed(0) : '—') +
+    row('Mood', bar(agent ? agent.mood : 0.5));
+  $('panel').classList.add('open');
+}
+
+const row = (k, v) => '<dt>' + k + '</dt><dd>' + v + '</dd>';
+const bar = (v) => '<div class="bar"><i style="width:' + Math.round(v * 100) + '%"></i></div>';
+function closePanel() { state.selected = null; $('panel').classList.remove('open'); }
+window.closePanel = closePanel;
+
+// --- input -----------------------------------------------------------------
+
+let drag = null, pinch = null;
+
+canvas.addEventListener('pointerdown', (e) => {
+  canvas.setPointerCapture(e.pointerId);
+  drag = { x: e.clientX, y: e.clientY, moved: 0 };
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!drag || pinch) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag.moved += Math.abs(dx) + Math.abs(dy);
+  state.camera.x -= dx / state.camera.scale;
+  state.camera.y -= dy / state.camera.scale;
+  drag.x = e.clientX; drag.y = e.clientY;
+});
+canvas.addEventListener('pointerup', (e) => {
+  if (drag && drag.moved < 6) pick(e.clientX, e.clientY);
+  drag = null;
+});
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.0015));
+}, { passive: false });
+
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 2) {
+    pinch = { d: touchDist(e), scale: state.camera.scale };
+  }
+}, { passive: true });
+canvas.addEventListener('touchmove', (e) => {
+  if (pinch && e.touches.length === 2) {
+    e.preventDefault();
+    const ratio = touchDist(e) / pinch.d;
+    state.camera.scale = Math.max(0.8, Math.min(9, pinch.scale * ratio));
+  }
+}, { passive: false });
+canvas.addEventListener('touchend', () => { pinch = null; }, { passive: true });
+
+const touchDist = (e) => Math.hypot(
+  e.touches[0].clientX - e.touches[1].clientX,
+  e.touches[0].clientY - e.touches[1].clientY,
+);
+
+function zoomAt(sx, sy, factor) {
+  const before = screenToWorld(sx, sy);
+  state.camera.scale = Math.max(0.8, Math.min(9, state.camera.scale * factor));
+  const after = screenToWorld(sx, sy);
+  state.camera.x += before.x - after.x;
+  state.camera.y += before.y - after.y;
+}
+
+function pick(sx, sy) {
+  const p = screenToWorld(sx, sy);
+  let best = null, bestD = 9;
+  for (const a of state.agents.values()) {
+    const d = Math.hypot(a.x - p.x, a.y - p.y);
+    if (d < bestD) { bestD = d; best = a.id; }
+  }
+  if (best) { state.selected = best; renderPanel(); return; }
+  closePanel();
+}
+
+window.addEventListener('resize', () => {});
+boot();
+</script>
+</body>
+</html>

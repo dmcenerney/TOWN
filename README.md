@@ -8,16 +8,18 @@ The town is observed, not played. Humans get a window; the simulation gets the l
 
 ## Where this is
 
-**Stage 3 of 10 — complete.** Alder Bend is a working town. People wake, eat, walk to work, earn wages, buy groceries with money that leaves their account and lands in a shop's, and go to the bar when they are lonely. Eight businesses trade, hire, restock and can fail.
+**Stage 4 of 10 — complete.** Alder Bend is a working town. People wake, eat, walk to work, earn wages, buy groceries with money that leaves their account and lands in a shop's, and go to the bar when they are lonely. Eight businesses trade, hire, restock and can fail.
 
-The broadcast layer is built: the simulation now emits immutable hour-blocks a browser can play back frame by frame. There is no browser yet. That is Stage 4.
+You can open the page and watch Alder Bend. Streets, buildings, weather, day and night, and twenty-five people walking to work, to the market and to the bar — every position on screen computed from the same arithmetic the simulation uses.
+
+It does not run unattended yet. That is Stage 5.
 
 ```
  0  Skeleton          ██████████  time · rng · ledger · invariants · genesis
  1  Space & motion    ██████████  map · nav graph · routing · movement segments
  2  Life & ledger     ██████████  needs · schedules · jobs · wages · food · shops
  3  Broadcast         ██████████  events · playback blocks · manifest · retention
- 4  THE TOWN          ··········  the page you can open and watch
+ 4  THE TOWN          ██████████  the page you can open and watch
  5  Live loop         ··········  Actions · Pages · unattended operation
  6  Society           ··········  relationships · encounters · gossip · newspaper
  7  Cognition         ··········  LLM deliberation · budget · recorded decisions
@@ -122,6 +124,21 @@ Getting here took five soaks and four wrong answers, each of which is worth reco
 - **A restaurant with two staff cannot be supported by twenty-five people's appetite for eating out.** One cook is a business; two is a wage bill.
 
 None of these were caught by reading the code. All of them were caught by running a thousand days and looking at who was still solvent.
+
+---
+
+## Watching it
+
+`index.html` is the whole client: one file, no build step, no dependencies, no framework. It fetches the manifest, works out which simulated minute the town is currently showing, pulls that hour's block, and draws it at sixty frames a second.
+
+- pan by dragging, pinch or scroll to zoom, tap a citizen to inspect them
+- day and night, lit windows after dark, weather in the corner
+- an event ticker carrying what just happened, in words
+- works the same on a phone, an iPad and a desktop
+
+There is no way to influence anything from this page. There is no write path to look for. Alder Bend is observed, not played.
+
+Every dot is a person the ledger knows about. If one is walking down Main Street, a journey was planned with a departure and an arrival; if one is inside Miller's Market, they are on the occupant list and about to spend money that will leave their account.
 
 ---
 

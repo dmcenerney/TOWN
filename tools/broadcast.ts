@@ -67,8 +67,30 @@ for (const block of kept) {
   bytes += json.length;
 }
 
+// The roster: names, ages, jobs. Kept out of every block because a name does
+// not change sixty times an hour, and repeating twenty-five of them in every
+// file is how an archive gets fat.
+writeFileSync(
+  new URL('roster.json', outDir),
+  JSON.stringify(
+    [...world.citizens.values()].map((c) => ({
+      id: c.identity.id,
+      name: `${c.identity.firstName} ${c.identity.lastName}`,
+      age: Math.floor((world.tick / 1440 - c.identity.birthDay) / 360),
+      home: c.identity.homeId,
+      household: world.households.get(c.identity.householdId)?.name ?? '',
+      job: c.employment ? world.businesses.get(c.employment.employerId)?.name ?? null : null,
+      role: c.employment?.role ?? null,
+      cash: world.ledger.balanceOf(c.accountId),
+    })),
+  ),
+);
+
 const manifest = buildManifest(world, kept, {
-  realMs: Date.parse('2026-01-01T00:00:00Z'),
+  // Anchored to the moment the broadcast was produced. Stage 5 regenerates
+  // this every ten minutes from a GitHub Action, which is what keeps the
+  // playback clock walking forward instead of pinned to the end of history.
+  realMs: Date.now(),
   simMinutesPerRealSecond: config.broadcast.simMinutesPerRealSecond,
   leadRealMinutes: config.broadcast.leadTargetRealMinutes,
 });

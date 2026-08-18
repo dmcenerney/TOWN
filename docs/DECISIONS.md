@@ -124,3 +124,22 @@ Recent days keep every hour; older days keep only hours containing an event of
 importance 0.25 or higher. Movement is not history. This is the difference
 between 54 MB and 9 MB per simulated year, and between a usable repository and
 an unusable one at Day 10,000.
+
+---
+
+**D-025 · The client is one static HTML file with no build step.**
+No bundler, no framework, no dependency graph to rot. It is served directly from
+the repository root, reads `world/` and `stream/` from the same origin, and will
+still open in a browser in ten years. For a project whose point is longevity,
+a build pipeline is a liability, not a convenience.
+
+**D-026 · Canvas 2D, drawing a Cartesian world.**
+The renderer projects world metres to screen pixels through one function. Going
+isometric later is a change to that function and new art, with no simulation
+change at all. Choosing a 3D engine now would have bought nothing and cost the
+upgrade path.
+
+**D-027 · The client never invents state.**
+If something needs to be drawn, the simulation emits it first. Building
+appearance, occupancy, mood, weather and every position come from the block.
+The renderer has no access to simulation types and no way to guess.
