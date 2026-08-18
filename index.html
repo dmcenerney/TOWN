@@ -77,6 +77,34 @@
   .bar { height:3px; background:var(--line); margin-top:3px; position:relative; }
   .bar i { position:absolute; inset:0 auto 0 0; background:var(--accent); }
 
+  .tabs {
+    position:fixed; z-index:6; left:14px; top:calc(max(10px, env(safe-area-inset-top)) + 34px);
+    display:flex; gap:6px;
+  }
+  .tabs button {
+    font: 500 10.5px/1 ui-monospace, monospace; letter-spacing:.12em; text-transform:uppercase;
+    color:#cfcabb; background:rgba(18,20,15,.6); border:1px solid rgba(232,228,217,.22);
+    padding:7px 11px; border-radius:2px; cursor:pointer;
+  }
+  .tabs button:active { background:rgba(232,228,217,.16); }
+
+  .panel.wide { width:min(560px, calc(100vw - 24px)); }
+  .panel .scroll { max-height:min(58vh, 460px); overflow-y:auto; -webkit-overflow-scrolling:touch; margin:0 -20px; padding:0 20px; }
+  table { width:100%; border-collapse:collapse; font-size:11.5px; }
+  th { text-align:left; font-weight:500; color:var(--dim); text-transform:uppercase;
+       letter-spacing:.08em; font-size:9.5px; padding:0 0 6px; position:sticky; top:0; background:var(--paper); }
+  th, td { padding-right:14px; }
+  th:last-child, td:last-child { padding-right:0; }
+  td { padding:5px 14px 5px 0; border-top:1px solid var(--line); vertical-align:middle; }
+  td:nth-child(2) { text-align:right; }
+  td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.click { cursor:pointer; }
+  tr.click:active td { background:rgba(140,74,47,.1); }
+  .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:7px; vertical-align:baseline; }
+  .who { font-size:12.5px; padding:6px 0; border-top:1px solid var(--line); display:flex; justify-content:space-between; gap:12px; cursor:pointer; }
+  .who em { font-style:normal; color:var(--dim); font-size:11px; }
+  .empty { color:var(--dim); font-size:12px; padding:10px 0; }
+
   .note { position:fixed; inset:0; display:grid; place-items:center; color:var(--paper);
           font-size:13px; letter-spacing:.06em; z-index:20; background:var(--ink); text-align:center; padding:24px; }
 </style>
@@ -91,13 +119,18 @@
   <span class="right" id="weather"></span>
 </div>
 
+<div class="tabs">
+  <button onclick="showDirectory()">Citizens</button>
+  <button onclick="showPlaces()">Places</button>
+</div>
+
 <div class="ticker" id="ticker"></div>
 
 <div class="panel" id="panel">
   <div class="close" onclick="closePanel()">×</div>
   <h2 id="pname"></h2>
   <div class="sub" id="psub"></div>
-  <dl id="pbody"></dl>
+  <div id="pbody"></div>
 </div>
 
 <div class="note" id="note">loading Alder Bend…</div>
@@ -114,7 +147,8 @@ const state = {
   map: null, manifest: null, roster: new Map(),
   blocks: new Map(), simMinute: 0, block: null,
   camera: { x: 210, y: 150, scale: 2.6 },
-  selected: null, agents: new Map(), buildings: new Map(),
+  selected: null, selectedBuilding: null, view: null,
+  agents: new Map(), buildings: new Map(),
 };
 
 const BUILDING_COLOUR = {
@@ -413,35 +447,162 @@ function updateHud(minute) {
       .join('');
     $('ticker').innerHTML = recent;
   }
-  if (state.selected) renderPanel();
+  if (state.view) renderPanel();
 }
 
 const esc = (s) => s.replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
 // --- inspector -------------------------------------------------------------
 
+/**
+ * The inspector has three faces: one person, one place, or the whole town.
+ * All three read from the same block the renderer is drawing, so what a panel
+ * says and what the screen shows can never disagree.
+ */
 function renderPanel() {
-  const id = state.selected;
-  const person = state.roster.get(id);
-  const agent = state.agents.get(id);
+  if (state.view === 'citizen') return renderCitizen();
+  if (state.view === 'building') return renderBuilding();
+  if (state.view === 'directory') return renderDirectory();
+  if (state.view === 'places') return renderPlaces();
+}
+
+function open(wide) {
+  const p = $('panel');
+  p.classList.add('open');
+  p.classList.toggle('wide', Boolean(wide));
+}
+
+function renderCitizen() {
+  const person = state.roster.get(state.selected);
+  const agent = state.agents.get(state.selected);
   if (!person) return;
-  const where = agent && agent.inside ? (state.buildings.get(agent.inside) || {}).name : null;
+  const inside = agent && agent.inside ? state.buildings.get(agent.inside) : null;
 
   $('pname').textContent = person.name;
   $('psub').textContent = (person.job || 'unemployed') + ' · age ' + person.age;
-  $('pbody').innerHTML =
+  $('pbody').innerHTML = '<dl>' +
     row('Household', person.household) +
     row('Home', (state.buildings.get(person.home) || {}).name || '—') +
     row('Doing', agent ? agent.activity.replace(/_/g, ' ') : '—') +
-    row('Where', where || (agent && agent.moving ? 'on the street' : 'outdoors')) +
+    row('Where', inside ? inside.name : (agent && agent.moving ? 'on the street' : 'outdoors')) +
     row('Position', agent ? agent.x.toFixed(0) + ', ' + agent.y.toFixed(0) : '—') +
-    row('Mood', bar(agent ? agent.mood : 0.5));
-  $('panel').classList.add('open');
+    row('Mood', bar(agent ? agent.mood : 0.5)) +
+    '</dl>' +
+    (inside ? '<div style="margin-top:14px"><div class="sub">Also here</div>' +
+      whoIsIn(inside.id, state.selected) + '</div>' : '');
+  open(false);
 }
 
-const row = (k, v) => '<dt>' + k + '</dt><dd>' + v + '</dd>';
-const bar = (v) => '<div class="bar"><i style="width:' + Math.round(v * 100) + '%"></i></div>';
-function closePanel() { state.selected = null; $('panel').classList.remove('open'); }
+/** Everyone currently inside a given building, drawn from the live block. */
+function whoIsIn(buildingId, exceptId) {
+  const here = [];
+  for (const a of state.agents.values()) {
+    if (a.inside !== buildingId || a.id === exceptId) continue;
+    const person = state.roster.get(a.id);
+    if (person) here.push({ a: a, p: person });
+  }
+  if (!here.length) return '<div class="empty">Nobody else.</div>';
+  here.sort((x, y) => x.p.name.localeCompare(y.p.name));
+  return here.map((h) =>
+    '<div class="who" onclick="selectCitizen(\'' + h.a.id + '\')">' +
+      '<span><i class="dot" style="background:' + moodColour(h.a.mood) + '"></i>' + esc(h.p.name) + '</span>' +
+      '<em>' + esc(h.a.activity.replace(/_/g, ' ')) + '</em>' +
+    '</div>').join('');
+}
+
+function renderBuilding() {
+  const b = state.buildings.get(state.selectedBuilding);
+  if (!b) return;
+  const vis = state.blockBuildings && state.blockBuildings.get(b.id);
+  const occupants = [...state.agents.values()].filter((a) => a.inside === b.id);
+
+  $('pname').textContent = b.name;
+  $('psub').textContent = b.type.replace(/_/g, ' ') + ' · ' + b.street;
+  $('pbody').innerHTML = '<dl>' +
+    row('Status', vis ? vis.state : 'open') +
+    row('Hours', b.openingHours ? b.openingHours[0] + ':00 – ' + b.openingHours[1] + ':00' : 'always') +
+    row('Inside now', occupants.length + ' of ' + b.capacity) +
+    '</dl>' +
+    '<div style="margin-top:14px"><div class="sub">Who is here</div>' + whoIsIn(b.id, null) + '</div>';
+  open(false);
+}
+
+/** The whole town on one page. */
+function renderDirectory() {
+  const rows = [...state.roster.values()].map((p) => {
+    const a = state.agents.get(p.id);
+    const inside = a && a.inside ? (state.buildings.get(a.inside) || {}).name : null;
+    return { p: p, a: a, where: inside || (a && a.moving ? 'walking' : 'outdoors') };
+  }).sort((x, y) => x.p.name.localeCompare(y.p.name));
+
+  $('pname').textContent = 'Citizens';
+  $('psub').textContent = rows.length + ' living · ' +
+    rows.filter((r) => r.p.job).length + ' employed';
+  $('pbody').innerHTML = '<div class="scroll"><table><thead><tr>' +
+    '<th>Name</th><th>Age</th><th>Work</th><th>Doing</th><th>Where</th>' +
+    '</tr></thead><tbody>' +
+    rows.map((r) =>
+      '<tr class="click" onclick="selectCitizen(\'' + r.p.id + '\')">' +
+        '<td><i class="dot" style="background:' + moodColour(r.a ? r.a.mood : .5) + '"></i>' + esc(r.p.name) + '</td>' +
+        '<td class="num">' + r.p.age + '</td>' +
+        '<td>' + esc(r.p.job || '—') + '</td>' +
+        '<td>' + esc(r.a ? r.a.activity.replace(/_/g, ' ') : '—') + '</td>' +
+        '<td>' + esc(r.where) + '</td>' +
+      '</tr>').join('') +
+    '</tbody></table></div>';
+  open(true);
+}
+
+function renderPlaces() {
+  const rows = state.map.buildings.filter((b) => b.type !== 'home').map((b) => {
+    const vis = state.blockBuildings && state.blockBuildings.get(b.id);
+    const n = [...state.agents.values()].filter((a) => a.inside === b.id).length;
+    return { b: b, n: n, state: vis ? vis.state : 'open' };
+  }).sort((x, y) => y.n - x.n || x.b.name.localeCompare(y.b.name));
+
+  const homes = state.map.buildings.filter((b) => b.type === 'home');
+  const atHome = [...state.agents.values()].filter((a) =>
+    a.inside && homes.some((h) => h.id === a.inside)).length;
+
+  $('pname').textContent = 'Places';
+  $('psub').textContent = rows.length + ' public buildings · ' + atHome + ' people at home';
+  $('pbody').innerHTML = '<div class="scroll"><table><thead><tr>' +
+    '<th>Building</th><th>Street</th><th>Status</th><th>Inside</th>' +
+    '</tr></thead><tbody>' +
+    rows.map((r) =>
+      '<tr class="click" onclick="selectBuilding(\'' + r.b.id + '\')">' +
+        '<td>' + esc(r.b.name) + '</td>' +
+        '<td>' + esc(r.b.street) + '</td>' +
+        '<td>' + esc(r.state) + '</td>' +
+        '<td class="num">' + r.n + '</td>' +
+      '</tr>').join('') +
+    '</tbody></table></div>';
+  open(true);
+}
+
+function selectCitizen(id) {
+  state.selected = id; state.selectedBuilding = null; state.view = 'citizen';
+  const a = state.agents.get(id);
+  if (a) { state.camera.x = a.x; state.camera.y = a.y; }
+  renderPanel();
+}
+function selectBuilding(id) {
+  state.selectedBuilding = id; state.selected = null; state.view = 'building';
+  const b = state.buildings.get(id);
+  if (b) { state.camera.x = b.position.x; state.camera.y = b.position.y; }
+  renderPanel();
+}
+function showDirectory() { state.view = 'directory'; state.selected = null; state.selectedBuilding = null; renderPanel(); }
+function showPlaces() { state.view = 'places'; state.selected = null; state.selectedBuilding = null; renderPanel(); }
+window.selectCitizen = selectCitizen;
+window.selectBuilding = selectBuilding;
+window.showDirectory = showDirectory;
+window.showPlaces = showPlaces;
+
+function closePanel() {
+  state.selected = null; state.selectedBuilding = null; state.view = null;
+  $('panel').classList.remove('open');
+}
 window.closePanel = closePanel;
 
 // --- input -----------------------------------------------------------------
@@ -503,7 +664,17 @@ function pick(sx, sy) {
     const d = Math.hypot(a.x - p.x, a.y - p.y);
     if (d < bestD) { bestD = d; best = a.id; }
   }
-  if (best) { state.selected = best; renderPanel(); return; }
+  if (best) { selectCitizen(best); return; }
+
+  // No one under the finger — try the building beneath it instead, so tapping
+  // a shop tells you who is in it.
+  for (const b of state.map.buildings) {
+    if (Math.abs(p.x - b.position.x) <= b.footprint.x / 2 &&
+        Math.abs(p.y - b.position.y) <= b.footprint.y / 2) {
+      selectBuilding(b.id);
+      return;
+    }
+  }
   closePanel();
 }
 
