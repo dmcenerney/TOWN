@@ -67,3 +67,35 @@ Arriving at a shut market leaves a citizen standing outside it on Main Street.
 This is a small thing that matters later: it is where "walked all the way there
 for nothing" enters the emotional model, and it prevents capacity from being a
 number the simulation quietly ignores.
+
+---
+
+**D-016 · The clinic, the Gazette and the bank are civic employers, not businesses.**
+They have a payroll and no product a citizen buys day to day, so the first soak
+closed all three inside three months. That was the rules working correctly on a
+bad premise. Their wages now come from the treasury, funded by an 18% income tax
+and 3% sales tax, and they cannot go bankrupt for want of sales they were never
+meant to make.
+
+**D-017 · Money enters Alder Bend through exactly two doors.**
+The factory sells goods abroad; the farm exports surplus grain. Everything else
+recirculates. This keeps the question "where did this money come from" answerable
+at any point in the town's history, and it means a collapse in exports is a real
+economic event rather than an accounting glitch.
+
+**D-018 · Poor relief exists.**
+An unemployed citizen with nothing left would otherwise sit at maximum hunger
+forever, which is not a simulation of poverty so much as an absence of one. The
+treasury pays a week of food to anyone with no work and no money — small enough
+to be worth escaping, real enough to survive on.
+
+**D-019 · Businesses are sized for a town of twenty-five.**
+Staffing targets were arrived at empirically rather than by taste. Two cooks and
+two bartenders cannot be supported by twenty-five people's discretionary
+spending; the soak closed them every time until the numbers came down.
+
+**D-020 · Routine life never calls a language model.**
+Waking, eating, commuting, working, shopping and sleeping are what a person does
+when no decision is required. Spending tokens on them would be spending money to
+make the town duller. Stage 7 adds a gate in front of the planner so that a
+citizen facing something genuinely novel gets a mind instead of a rule.

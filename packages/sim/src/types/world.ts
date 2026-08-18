@@ -177,6 +177,8 @@ export interface Citizen {
   causeOfDeath?: string;
   /** Ticks worked since the last payroll run. Cleared when wages are posted. */
   unpaidMinutes: number;
+  /** Units of food in the house. Bought at the market, eaten at home. */
+  pantry: number;
 }
 
 // --- places -----------------------------------------------------------------
@@ -286,6 +288,8 @@ export type ScheduledTask =
   | { type: 'payroll'; businessId: BusinessId }
   | { type: 'business_close'; businessId: BusinessId }
   | { type: 'restock'; businessId: BusinessId }
+  | { type: 'business_day'; businessId: BusinessId }
+  | { type: 'hiring' }
   | { type: 'tax_collection' }
   | { type: 'weather_step' }
   | { type: 'day_close' };

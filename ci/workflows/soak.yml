@@ -1,0 +1,71 @@
+name: soak
+
+# Run a soak on demand from the Actions tab — including from the GitHub app on
+# a phone or iPad. Results are written to the job summary, so they are readable
+# without downloading an artifact.
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Simulated days to run'
+        required: true
+        default: '1000'
+        type: string
+      seed:
+        description: 'World seed (blank = the canonical Alder Bend seed)'
+        required: false
+        type: string
+      strict:
+        description: 'Check invariants on every tick (much slower)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  soak:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          # No cache: npm here. It requires a committed lockfile, and TOWN has
+          # three dev dependencies that install in seconds. Caching would save
+          # nothing and fail the build on a fresh clone.
+
+      - run: npm install --no-audit --no-fund
+
+      - name: Soak
+        run: |
+          ARGS="--days ${{ inputs.days }}"
+          if [ -n "${{ inputs.seed }}" ]; then ARGS="$ARGS --seed ${{ inputs.seed }}"; fi
+          if [ "${{ inputs.strict }}" = "true" ]; then ARGS="$ARGS --strict"; fi
+
+          node --import tsx tools/soak.ts $ARGS | tee soak-report.txt
+
+          {
+            echo "## Alder Bend soak"
+            echo ""
+            echo '```'
+            cat soak-report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Founding roster
+        run: |
+          {
+            echo "## Founding roster"
+            echo ""
+            echo '```'
+            node --import tsx tools/inspect.ts
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soak-report
+          path: soak-report.txt
+          retention-days: 30

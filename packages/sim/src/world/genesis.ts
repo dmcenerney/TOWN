@@ -18,6 +18,11 @@ import type { BuildingId, CitizenId, HouseholdId, NodeId, Cents, AccountId } fro
 import { accountId, buildingId, citizenId, householdId, asId } from '../types/ids.ts';
 import { Ledger, EXTERNAL_ACCOUNT } from '../core/ledger.ts';
 import { buildNavGraph, isFullyConnected, parseTownMap } from '../space/navgraph.ts';
+import { hire, roleFor } from '../econ/business.ts';
+import { ensureBusy } from '../econ/life.ts';
+import { RETAIL, WHOLESALE } from '../econ/tuning.ts';
+import type { Business, BusinessType, GoodId } from '../types/world.ts';
+import { businessId as makeBusinessId } from '../types/ids.ts';
 import type { TownMap } from '../types/map.ts';
 import { Scheduler, TICKS_PER_DAY, DAYS_PER_YEAR, seasonOf } from '../core/clock.ts';
 import { rngFor, type Rng } from '../core/rng.ts';
@@ -285,6 +290,7 @@ export function createWorld(config: GenesisConfig, rawMap: unknown): World {
         goals: [],
         alive: true,
         unpaidMinutes: 0,
+        pantry: r.int(2, 6),
       };
 
       world.citizens.set(cid, citizen);
@@ -337,11 +343,116 @@ export function createWorld(config: GenesisConfig, rawMap: unknown): World {
     lines: cashLines,
   });
 
+  // --- found the businesses -----------------------------------------------
+  // Each trading building becomes a real firm with an account, stock it had to
+  // be given at founding, and an owner drawn from the townspeople. Ownership is
+  // assigned deterministically by seed, so the same person founds the market in
+  // every replay of Alder Bend's history.
+
+  const TRADES: { type: BusinessType; buildingType: string; staff: number; float: Cents }[] = [
+    { type: "farm", buildingType: "farm", staff: 4, float: 400000 },
+    { type: 'factory', buildingType: 'factory', staff: 8, float: 600000 },
+    { type: 'market', buildingType: 'market', staff: 3, float: 350000 },
+    { type: 'restaurant', buildingType: 'restaurant', staff: 1, float: 700000 },
+    { type: 'bar', buildingType: 'bar', staff: 1, float: 350000 },
+    { type: 'clinic', buildingType: 'clinic', staff: 2, float: 220000 },
+    { type: 'newspaper', buildingType: 'newspaper', staff: 1, float: 150000 },
+    { type: 'bank', buildingType: 'bank', staff: 1, float: 500000 },
+  ];
+
+  const ownerPool = rngFor(seed, 'genesis', 'owners').shuffle([...world.citizens.keys()]);
+  let ownerIdx = 0;
+  let bizN = 0;
+
+  for (const trade of TRADES) {
+    const building = [...world.buildings.values()].find((b) => b.type === trade.buildingType);
+    if (!building) continue;
+
+    const bid = makeBusinessId(++bizN);
+    const acct = accountId(`business:${bid}`);
+    ledger.open(acct, 'business', bid, 0);
+    ledger.post({
+      tick: 0,
+      kind: 'genesis',
+      memo: `${building.name} opens for trade`,
+      lines: [
+        { account: acct, delta: trade.float },
+        { account: EXTERNAL_ACCOUNT, delta: -trade.float },
+      ],
+    });
+
+    const owner = ownerPool[ownerIdx++ % ownerPool.length]!;
+    const business: Business = {
+      id: bid,
+      name: building.name,
+      type: trade.type,
+      ownerId: owner,
+      buildingId: building.id,
+      accountId: acct,
+      employees: [],
+      inventory: startingStock(trade.type),
+      prices: trade.type === 'restaurant' ? { ...RETAIL, grain: RETAIL.meal } : { ...RETAIL },
+      weekly: { revenue: 0, expenses: 0, payroll: 0 },
+      consecutiveLossWeeks: 0,
+      loanIds: [],
+      status: 'trading',
+    };
+    world.businesses.set(bid, business);
+    building.businessId = bid;
+    building.ownerId = owner;
+  }
+
+  // --- put people to work --------------------------------------------------
+  // Staffed in order of the trades above, leaving a couple of founders looking
+  // for work. Full employment on Day 1 would be a lie, and the labour market
+  // needs someone to hire.
+
+  const workforce = rngFor(seed, 'genesis', 'workforce').shuffle(
+    [...world.citizens.values()]
+      .filter((c) => -c.identity.birthDay / DAYS_PER_YEAR >= 18)
+      .map((c) => c.identity.id),
+  );
+  let nextWorker = 0;
+  const genesisEvents: never[] = [];
+
+  for (const trade of TRADES) {
+    const biz = [...world.businesses.values()].find((b) => b.type === trade.type);
+    if (!biz) continue;
+    for (let i = 0; i < trade.staff && nextWorker < workforce.length - 2; i++) {
+      hire(world, biz, workforce[nextWorker++]!, roleFor(biz.type), genesisEvents);
+    }
+  }
+
   // --- prime the scheduler ------------------------------------------------
   scheduler.schedule(1, { type: 'weather_step' });
   scheduler.schedule(TICKS_PER_DAY, { type: 'day_close' });
+  scheduler.schedule(LABOUR_REVIEW_TICK, { type: 'hiring' });
+  for (const biz of world.businesses.values()) {
+    scheduler.schedule(6 * 60, { type: 'business_day', businessId: biz.id });
+    scheduler.schedule(5 * TICKS_PER_DAY + 17 * 60, { type: 'payroll', businessId: biz.id });
+  }
+
+  // Everyone starts the first minute with something to do. Without this the
+  // town stands motionless until the first scheduled event wakes it.
+  for (const c of world.citizens.values()) ensureBusy(world, c, genesisEvents2);
 
   return world;
+}
+
+const genesisEvents2: never[] = [];
+
+const LABOUR_REVIEW_TICK = 7 * TICKS_PER_DAY + 9 * 60;
+
+function startingStock(type: BusinessType): Partial<Record<GoodId, number>> {
+  switch (type) {
+    case 'market': return { food: 90 };
+    case 'restaurant': return { grain: 60 };
+    case 'bar': return { drink: 70 };
+    case 'clinic': return { medicine: 20 };
+    case 'farm': return { grain: 120 };
+    case 'factory': return { goods: 0 };
+    default: return {};
+  }
 }
 
 /** Parse and validate a genesis.json payload. */

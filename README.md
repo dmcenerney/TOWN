@@ -8,14 +8,14 @@ The town is observed, not played. Humans get a window; the simulation gets the l
 
 ## Where this is
 
-**Stage 1 of 10 — complete.** The spine exists, and so does the town: streets, twenty-nine buildings, a navigation graph, and citizens who walk between them along real routes in real time.
+**Stage 2 of 10 — complete.** Alder Bend is a working town. People wake, eat, walk to work, earn wages, buy groceries with money that leaves their account and lands in a shop's, and go to the bar when they are lonely. Eight businesses trade, hire, restock and can fail.
 
-Nobody has a reason to walk yet. That is Stage 2.
+Nobody can see it yet. That is Stages 3 and 4.
 
 ```
  0  Skeleton          ██████████  time · rng · ledger · invariants · genesis
  1  Space & motion    ██████████  map · nav graph · routing · movement segments
- 2  Life & ledger     ··········  needs · schedules · jobs · wages · food · shops
+ 2  Life & ledger     ██████████  needs · schedules · jobs · wages · food · shops
  3  Broadcast         ··········  events · playback blocks · manifest · retention
  4  THE TOWN          ··········  the page you can open and watch
  5  Live loop         ··········  Actions · Pages · unattended operation
@@ -101,6 +101,30 @@ A journey is decided once and then becomes a closed-form function of time. Askin
 
 ---
 
+## A thousand days of Alder Bend
+
+```
+  day   1000  winter  pop 25  unemp 8%  biz 8  median $22,481.68  gini 0.523
+
+  employed         23/25  (8.0% unemployed)
+  starving         4.0%
+  businesses open  8
+  ledger balance   0 (must be 0)
+```
+
+Money enters the town through two doors: Franklin Manufacturing sells goods to the outside world, and Hale Farm exports its surplus grain. Everything else is recirculation — wages out, groceries in, tax to the treasury, the treasury paying the clinic and the Gazette. Stop the exports and the town slowly runs out of money, which is correct.
+
+Getting here took five soaks and four wrong answers, each of which is worth recording:
+
+- **The clinic, the Gazette and the bank all closed inside three months.** They had payroll and no customers. The error was not the closure — the rules did exactly the right thing — it was pretending they were businesses at all. They are civic employers now, paid from the treasury.
+- **The farm's export income was below its wage bill.** It produced grain diligently and went bankrupt.
+- **The restaurant earned nothing for a year.** Citizens walked there when hungry and then ate the food they had brought from home, because the meal branch checked the pantry before it checked where the citizen was standing. One line.
+- **A restaurant with two staff cannot be supported by twenty-five people's appetite for eating out.** One cook is a business; two is a wage bill.
+
+None of these were caught by reading the code. All of them were caught by running a thousand days and looking at who was still solvent.
+
+---
+
 ## Rules the code enforces
 
 These are not aspirations. They are assertions that run every tick in development and fail the build in CI.
@@ -139,8 +163,8 @@ day 30   a231a64ca9ab223f…
 
 | Run | Speed |
 |---|---|
-| 1,000 days, sampled invariants | 0.5 s · ~1,850 days/sec |
-| 1,000 days, invariants every tick | ~35 s |
-| 89 tests | 6 s |
+| 1,000 days, sampled invariants | 3.5 s · ~275 days/sec |
+| 1,000 days, invariants every tick | ~90 s |
+| 102 tests | 12 s |
 
-Stage 1 cost about 25% of the tick budget, all of it in the wider invariant suite rather than in movement — journeys are closed-form, so a citizen walking across town costs nothing per minute.
+Stage 2 is where the cost arrived: 195,000 events over a thousand days, and every one of them a real state change. Needs are still evaluated lazily, so a citizen asleep for eight hours costs nothing until someone asks about her.

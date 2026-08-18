@@ -46,6 +46,10 @@ function parseArgs(argv: string[]): Args {
 interface Sample {
   day: number;
   population: number;
+  employed: number;
+  unemployment: number;
+  starving: number;
+  businesses: number;
   moneySupply: number;
   medianCitizenCash: number;
   gini: number;
@@ -58,9 +62,15 @@ function sample(w: World): Sample {
     .map((c) => w.ledger.balanceOf(c.accountId))
     .sort((a, b) => a - b);
   const median = cash.length === 0 ? 0 : cash[Math.floor(cash.length / 2)]!;
+  const alive = [...w.citizens.values()].filter((c) => c.alive);
+  const employed = alive.filter((c) => c.employment).length;
   return {
     day: Math.floor(w.tick / TICKS_PER_DAY),
     population: countLiving(w),
+    employed,
+    unemployment: alive.length ? (alive.length - employed) / alive.length : 0,
+    starving: alive.length ? alive.filter((c) => c.needs.hunger > 0.9).length / alive.length : 0,
+    businesses: [...w.businesses.values()].filter((b) => b.status !== 'closed').length,
     moneySupply: w.ledger.moneySupply(),
     medianCitizenCash: median,
     gini: gini(cash),
@@ -122,7 +132,8 @@ for (let d = 0; d < args.days; d++) {
     log(
       `  day ${String(s.day).padStart(6)}  ${c.season.padEnd(6)}  ` +
         `pop ${String(s.population).padStart(4)}  ` +
-        `supply ${formatCents(s.moneySupply).padStart(14)}  ` +
+        `unemp ${(s.unemployment * 100).toFixed(0).padStart(3)}%  ` +
+        `biz ${String(s.businesses).padStart(2)}  ` +
         `median ${formatCents(s.medianCitizenCash).padStart(12)}  ` +
         `gini ${s.gini.toFixed(3)}`,
     );
@@ -138,6 +149,9 @@ log(`  population       ${last.population}`);
 log(`  money supply     ${formatCents(last.moneySupply)}`);
 log(`  treasury         ${formatCents(last.treasury)}`);
 log(`  wealth gini      ${last.gini.toFixed(3)}`);
+log(`  employed         ${last.employed}/${last.population}  (${(last.unemployment * 100).toFixed(1)}% unemployed)`);
+log(`  starving         ${(last.starving * 100).toFixed(1)}%`);
+log(`  businesses open  ${last.businesses}`);
 log(`  events emitted   ${eventCount.toLocaleString()}`);
 log(`  ledger balance   ${world.ledger.totalBalance()} (must be 0)`);
 log(`  world hash       ${hashWorld(world).slice(0, 16)}`);

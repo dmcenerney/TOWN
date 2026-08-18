@@ -1,0 +1,66 @@
+name: verify
+
+# Every change to Alder Bend's rules must survive a century before it lands.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          # No cache: npm here. It requires a committed lockfile, and TOWN has
+          # three dev dependencies that install in seconds. Caching would save
+          # nothing and fail the build on a fresh clone.
+
+      - name: Install
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Soak — 1,000 days, sampled invariants
+        run: |
+          node --import tsx tools/soak.ts --days 1000 | tee soak-report.txt
+          {
+            echo "## Alder Bend — 1,000 days"
+            echo ""
+            echo '```'
+            cat soak-report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Soak — 100 days, invariants on every tick
+        run: npm run soak -- --days 100 --strict --quiet
+
+      - name: The town
+        run: |
+          {
+            echo "## Alder Bend"
+            echo ""
+            echo '```'
+            node --import tsx tools/map.ts
+            echo '```'
+            echo ""
+            echo "## A citizen walks to the market"
+            echo ""
+            echo '```'
+            node --import tsx tools/walk.ts
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

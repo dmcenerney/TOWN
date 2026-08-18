@@ -19,6 +19,10 @@ import { assertWorld, shouldCheck } from '../core/invariants.ts';
 import { rngFor } from '../core/rng.ts';
 import { emit } from './emit.ts';
 import { colocated, completeArrival } from '../space/movement.ts';
+import { beginActivity, completeActivity, ensureBusy, startHere } from '../econ/life.ts';
+import { exportSurplus, restock, reviewHeadcount, runPayroll } from '../econ/business.ts';
+import { RELIEF, STAFF_TARGET } from '../econ/tuning.ts';
+import { refreshNeeds } from '../citizen/needs.ts';
 
 export interface TickContext {
   world: World;
@@ -39,6 +43,10 @@ export interface Phase {
  */
 export const PHASES: Phase[] = [
   { name: 'arrivals', run: arrivalsPhase },
+  { name: 'activities', run: activitiesPhase },
+  { name: 'businessDay', run: businessDayPhase },
+  { name: 'payroll', run: payrollPhase },
+  { name: 'labour', run: labourPhase },
   { name: 'weather', run: weatherPhase },
   { name: 'dayClose', run: dayClosePhase },
 ];
@@ -139,6 +147,96 @@ export function advanceToTick(
 // --- built-in phases --------------------------------------------------------
 
 /**
+ * Activities finish here, and their consequences land: wages accrue, groceries
+ * change hands, hunger drops because food was actually eaten and paid for.
+ * The citizen then decides what to do next, which is the whole of daily life.
+ */
+function activitiesPhase(ctx: TickContext): void {
+  const { world } = ctx;
+  const ended = ctx.due.filter((t) => t.type === 'activity_end');
+  for (let i = ctx.due.length - 1; i >= 0; i--) {
+    if (ctx.due[i]!.type === 'activity_end') ctx.due.splice(i, 1);
+  }
+
+  for (const task of ended) {
+    if (task.type !== 'activity_end') continue;
+    const c = world.citizens.get(task.citizenId);
+    if (!c || !c.alive || !c.activity) continue;
+    if (c.activity.endTick !== world.tick) continue;
+    completeActivity(world, c, ctx.events);
+  }
+
+  // Anyone idle with no plan and no journey gets one. This is the safety net
+  // that stops a citizen quietly falling out of the world for a thousand days.
+  if (world.tick % 30 === 0) {
+    for (const c of world.citizens.values()) ensureBusy(world, c, ctx.events);
+  }
+}
+
+/** Once a day per firm: restock the shelves, sell the surplus abroad. */
+function businessDayPhase(ctx: TickContext): void {
+  const { world } = ctx;
+  const due = ctx.due.filter((t) => t.type === 'business_day');
+  for (let i = ctx.due.length - 1; i >= 0; i--) {
+    if (ctx.due[i]!.type === 'business_day') ctx.due.splice(i, 1);
+  }
+
+  for (const task of due) {
+    if (task.type !== 'business_day') continue;
+    const biz = world.businesses.get(task.businessId);
+    if (!biz) continue;
+    world.scheduler.schedule(world.tick + TICKS_PER_DAY, { type: 'business_day', businessId: biz.id });
+    if (biz.status === 'closed') continue;
+    exportSurplus(world, biz, ctx.events);
+    restock(world, biz, ctx.events);
+  }
+}
+
+/** Friday evening. Wages, tax, the owner's draw, and the reckoning. */
+function payrollPhase(ctx: TickContext): void {
+  const { world } = ctx;
+  const due = ctx.due.filter((t) => t.type === 'payroll');
+  for (let i = ctx.due.length - 1; i >= 0; i--) {
+    if (ctx.due[i]!.type === 'payroll') ctx.due.splice(i, 1);
+  }
+
+  for (const task of due) {
+    if (task.type !== 'payroll') continue;
+    const biz = world.businesses.get(task.businessId);
+    if (!biz) continue;
+    if (biz.status !== 'closed') {
+      world.scheduler.schedule(world.tick + 7 * TICKS_PER_DAY, { type: 'payroll', businessId: biz.id });
+      runPayroll(world, biz, ctx.events);
+    }
+  }
+}
+
+/** The labour market, weekly. Somebody is hired; somebody is let go. */
+function labourPhase(ctx: TickContext): void {
+  const { world } = ctx;
+  const idx = ctx.due.findIndex((t) => t.type === 'hiring');
+  if (idx === -1) return;
+  ctx.due.splice(idx, 1);
+  world.scheduler.schedule(world.tick + 7 * TICKS_PER_DAY, { type: 'hiring' });
+
+  for (const biz of world.businesses.values()) {
+    reviewHeadcount(world, biz, ctx.events, STAFF_TARGET);
+  }
+
+  // Poor relief, paid after the hiring round so that anyone who just found work
+  // is no longer eligible for it.
+  for (const c of world.citizens.values()) {
+    if (!c.alive || c.employment) continue;
+    if (world.ledger.balanceOf(c.accountId) >= RELIEF.eligibleBelow) continue;
+    if (!world.ledger.canAfford(world.government.treasuryAccount, RELIEF.weeklyPayment)) break;
+    world.ledger.transfer(
+      world.tick, 'transfer', world.government.treasuryAccount, c.accountId,
+      RELIEF.weeklyPayment, `poor relief for ${c.identity.firstName} ${c.identity.lastName}`,
+    );
+  }
+}
+
+/**
  * Journeys end here and nowhere else.
  *
  * An arrival is the moment geography turns into society: the citizen stops being
@@ -163,6 +261,18 @@ function arrivalsPhase(ctx: TickContext): void {
 
     const { enteredBuilding, node } = completeArrival(world, c);
     const building = enteredBuilding ? world.buildings.get(enteredBuilding) : null;
+
+    // Pick the plan back up. Someone who walked to a shut door gets to choose
+    // again rather than standing on the pavement for the rest of the day.
+    const pending = c.plan[0];
+    if (pending) {
+      if (enteredBuilding && pending.targetId === enteredBuilding) {
+        startHere(world, c, pending, ctx.events);
+      } else {
+        c.plan = [];
+        beginActivity(world, c, { kind: 'idle', targetId: c.identity.homeId, notBefore: world.tick, duration: 20 }, ctx.events);
+      }
+    }
 
     emit(world, ctx.events, {
       type: 'arrived',
@@ -218,7 +328,11 @@ function dayClosePhase(ctx: TickContext): void {
     actors: ['world'],
     visibility: 'public',
     importance: 0.01,
-    payload: { day: dayOf(world.tick), population: countLiving(world) },
+    payload: {
+      day: dayOf(world.tick),
+      population: countLiving(world),
+      employed: [...world.citizens.values()].filter((c) => c.alive && c.employment).length,
+    },
   });
 
   world.scheduler.schedule(world.tick + TICKS_PER_DAY, { type: 'day_close' });

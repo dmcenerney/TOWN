@@ -17,7 +17,7 @@
     "currencySymbol": "$"
   },
   "government": {
-    "incomeTaxRate": 0.08,
+    "incomeTaxRate": 0.18,
     "salesTaxRate": 0.03
   },
   "broadcast": {

@@ -38,12 +38,15 @@ test('genesis: every founding dollar crosses the boundary account', () => {
   const supply = w.ledger.moneySupply();
   assert.equal(w.ledger.balanceOf(EXTERNAL_ACCOUNT), -supply);
   assert.equal(w.ledger.totalBalance(), 0);
-  assert.equal(w.ledger.journal.length, 1);
+  // One entry funds the citizens and the treasury; one more per business float.
+  assert.ok(w.ledger.journal.every((e) => e.kind === 'genesis'));
   assert.equal(w.ledger.journal[0]!.kind, 'genesis');
 
   let citizenCash = 0;
   for (const c of w.citizens.values()) citizenCash += w.ledger.balanceOf(c.accountId);
-  assert.equal(citizenCash + config.economy.treasuryFounding, supply);
+  let businessFloat = 0;
+  for (const b of w.businesses.values()) businessFloat += w.ledger.balanceOf(b.accountId);
+  assert.equal(citizenCash + businessFloat + config.economy.treasuryFounding, supply);
 });
 
 test('genesis: names are unique and money is whole dollars', () => {

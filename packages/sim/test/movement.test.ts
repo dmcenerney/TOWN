@@ -170,9 +170,18 @@ test('movement: a full building turns people away rather than overflowing', () =
   const w = fresh();
   advance(w, 9 * 60, { strictInvariants: false, invariantInterval: 120 });
   const market = w.buildings.get(MARKET)!;
+  // Clear the shop first: by Stage 2 there are real customers inside it.
+  for (const id of [...market.occupants]) {
+    const shopper = w.citizens.get(id)!;
+    shopper.activity = null;
+    shopper.plan = [];
+    leaveBuilding(w, shopper);
+  }
   market.capacity = 0;
 
-  const c = [...w.citizens.values()][2]!;
+  const c = [...w.citizens.values()].find((x) => x.location.kind === 'inside')!;
+  c.activity = null;
+  c.plan = [];
   const plan = departForBuilding(w, c, MARKET);
   advance(w, plan.arriveTick - w.tick, { strictInvariants: true });
 
