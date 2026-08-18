@@ -15,7 +15,7 @@ import tarfile
 from pathlib import Path
 
 SRC = Path("/mnt/user-data/outputs/town")
-OUT = Path("/mnt/user-data/outputs/install-alder-bend-stage2.yml")
+OUT = Path("/mnt/user-data/outputs/install-alder-bend-stage3.yml")
 
 def arcname_for(p: Path) -> str:
     """
@@ -103,7 +103,7 @@ jobs:
           git config user.name  "alder-bend-bot"
           git config user.email "alder-bend-bot@users.noreply.github.com"
           git add -A
-          git commit -m "Alder Bend Stage 2: needs, schedules, jobs, wages, shops, transactions"
+          git commit -m "Alder Bend Stage 3: broadcast blocks, manifest, tiered retention"
           git push
 
       - uses: actions/setup-node@v4
@@ -123,7 +123,7 @@ jobs:
         run: |
           node --import tsx tools/soak.ts --days 1000 | tee /tmp/soak.txt
           {{
-            echo "## Alder Bend, Stage 2"
+            echo "## Alder Bend, Stage 3"
             echo ""
             echo "The repository is written and committed. Pushes made by a workflow do not"
             echo "trigger other workflows, so the verification below ran here instead. Your own"

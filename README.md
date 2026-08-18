@@ -8,15 +8,15 @@ The town is observed, not played. Humans get a window; the simulation gets the l
 
 ## Where this is
 
-**Stage 2 of 10 — complete.** Alder Bend is a working town. People wake, eat, walk to work, earn wages, buy groceries with money that leaves their account and lands in a shop's, and go to the bar when they are lonely. Eight businesses trade, hire, restock and can fail.
+**Stage 3 of 10 — complete.** Alder Bend is a working town. People wake, eat, walk to work, earn wages, buy groceries with money that leaves their account and lands in a shop's, and go to the bar when they are lonely. Eight businesses trade, hire, restock and can fail.
 
-Nobody can see it yet. That is Stages 3 and 4.
+The broadcast layer is built: the simulation now emits immutable hour-blocks a browser can play back frame by frame. There is no browser yet. That is Stage 4.
 
 ```
  0  Skeleton          ██████████  time · rng · ledger · invariants · genesis
  1  Space & motion    ██████████  map · nav graph · routing · movement segments
  2  Life & ledger     ██████████  needs · schedules · jobs · wages · food · shops
- 3  Broadcast         ··········  events · playback blocks · manifest · retention
+ 3  Broadcast         ██████████  events · playback blocks · manifest · retention
  4  THE TOWN          ··········  the page you can open and watch
  5  Live loop         ··········  Actions · Pages · unattended operation
  6  Society           ··········  relationships · encounters · gossip · newspaper
@@ -125,6 +125,40 @@ None of these were caught by reading the code. All of them were caught by runnin
 
 ---
 
+## The broadcast
+
+Alder Bend does not run live. It runs *ahead*, and what a viewer watches is finished history played back on a delay — the way a stadium feed is live but a few seconds behind the pitch.
+
+This is the only honest answer to the problem in the brief. GitHub Actions is a scheduled job, not a game server, and any design where the browser guesses what is happening *right now* ends with two viewers seeing different towns.
+
+```
+REAL TIME  ─────────────────────────────────────────────►
+                    │                        │
+           viewers watch here        simulation head
+             (Day 184, 09:15)         (Day 191, 22:00)
+                    └────── 90 real minutes ──────┘
+```
+
+Each simulated hour becomes one immutable JSON file: a keyframe of where everybody was at the top of the hour, the journeys that follow, and the events worth drawing. Given that block, a browser can compute any frame in that hour by arithmetic, sixty times a second, without asking anyone anything.
+
+Synchronisation is not a protocol. The manifest carries one mapping — real milliseconds to simulated minute — and every viewer evaluates the same function on the same numbers. There is no server to disagree with.
+
+```
+npm run broadcast -- --days 90 --keep-days 14
+
+  339 hour-blocks written (1,822 compacted away)
+  1,274 journeys · 2,023 public events
+  24.9 KB per simulated day → about 8.8 MB per simulated year
+```
+
+Retention is tiered because a town meant to last ten thousand days cannot keep every hour of its life at full fidelity. Recent days stay whole; older ones keep only the hours in which something mattered. A citizen walking to the market on Day 40 is not worth a decade of storage.
+
+The archive comes free. Scrubbing back to Day 1 is the same player reading older blocks, because a block from Day 1 and a block from now are the same kind of object.
+
+**The test that matters:** at every tick, the position the browser would compute from a block is compared against the position the simulation actually holds. They agree to within a fifth of a metre. If those ever diverge, the town on screen is fiction — which is the one failure this project cannot tolerate.
+
+---
+
 ## Rules the code enforces
 
 These are not aspirations. They are assertions that run every tick in development and fail the build in CI.
@@ -165,6 +199,6 @@ day 30   a231a64ca9ab223f…
 |---|---|
 | 1,000 days, sampled invariants | 3.5 s · ~275 days/sec |
 | 1,000 days, invariants every tick | ~90 s |
-| 102 tests | 12 s |
+| 113 tests | 25 s |
 
 Stage 2 is where the cost arrived: 195,000 events over a thousand days, and every one of them a real state change. Needs are still evaluated lazily, so a citizen asleep for eight hours costs nothing until someone asks about her.

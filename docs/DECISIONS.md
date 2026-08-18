@@ -99,3 +99,28 @@ Waking, eating, commuting, working, shopping and sleeping are what a person does
 when no decision is required. Spending tokens on them would be spending money to
 make the town duller. Stage 7 adds a gate in front of the planner so that a
 citizen facing something genuinely novel gets a mind instead of a rule.
+
+---
+
+**D-021 · The town is broadcast on tape delay, not streamed live.**
+The simulation runs ahead of what viewers see by a configurable buffer, default
+ninety real minutes. Viewers watch committed, immutable history. This absorbs
+late GitHub Actions runs, guarantees every viewer sees an identical frame, and
+makes the archive free — watching Day 1 uses the same player as watching today.
+The cost, stated plainly: nobody ever sees the live edge.
+
+**D-022 · One immutable block per simulated hour.**
+Small enough to fetch on demand, large enough that a viewer joining mid-stream
+needs exactly one file. Each block carries a full keyframe, so arriving late
+costs one request rather than a history replay.
+
+**D-023 · The recorder observes and never participates.**
+It cannot write to the world. A broadcast that falls over cannot corrupt the
+civilization it is broadcasting, and a test asserts that a watched run and an
+unwatched run end with identical ledgers.
+
+**D-024 · Retention is tiered by whether anything happened.**
+Recent days keep every hour; older days keep only hours containing an event of
+importance 0.25 or higher. Movement is not history. This is the difference
+between 54 MB and 9 MB per simulated year, and between a usable repository and
+an unusable one at Day 10,000.

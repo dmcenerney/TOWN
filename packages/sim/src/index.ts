@@ -12,3 +12,5 @@ export * from './core/hash.ts';
 export * from './types/map.ts';
 export * from './space/navgraph.ts';
 export * from './space/movement.ts';
+export type { PlaybackBlock, Manifest, AgentKeyframe, MovementSegment, ActivitySpan, BuildingVisual, BroadcastEvent } from './broadcast/blocks.ts';
+export { Recorder, buildManifest, simMinuteAt, positionFromBlock, blockPath, BLOCK_MINUTES } from './broadcast/blocks.ts';
